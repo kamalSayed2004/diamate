@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+.active_card {
+  border-width: 4px;
+  border-color: #05df72;
+}
+
+.active_card button {
+  background-color: #05df72;
+  color: white;
+  transition-duration: 300ms;
+}
