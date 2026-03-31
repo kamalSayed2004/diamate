@@ -59,7 +59,7 @@ export default async function MealList({ patientId, token }: MealListProps) {
                   <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400">{meal.calories} kcal</p>
                 </div>
                 <div className="bg-white dark:bg-slate-800 px-2 py-1 rounded text-xs font-semibold text-slate-600 dark:text-slate-300 shadow-sm border border-slate-200 dark:border-slate-700">
-                  {new Date(meal.read_date).toLocaleDateString()}
+                  {new Date(meal.read_date).toLocaleDateString('en-US')}
                 </div>
               </div>
               

@@ -54,7 +54,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const isDark = darkMode === "dark";
 
   return (
-    <div className={`flex h-[100dvh] font-[family-name:var(--font-geist-sans)] transition-colors duration-300 ${isDark ? "bg-blue-950 text-blue-50" : "bg-[#f0f9ff] text-black"} overflow-hidden relative`}>
+    <div className={`flex h-[100dvh] font-[family-name:var(--font-geist-sans)] transition-colors duration-300 ${isDark ? "bg-blue-950 text-blue-50" : "bg-[#f0f9ff] text-black"} overflow-hidden relative`} suppressHydrationWarning={true}>
       {/* Background Gradient */}
       <div
         className={`pointer-events-none fixed inset-0 -z-10 ${isDark
@@ -71,7 +71,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           <span className="text-xl font-black tracking-tight text-black dark:text-white">DiaMate</span>
         </div>
         <button onClick={() => setIsMobileMenuOpen(true)}>
-          <Menu className="w-6 h-6 text-black dark:text-white" />
+          <Menu className="w-6 h-6 text-black dark:text-white" suppressHydrationWarning={true} />
         </button>
       </div>
 
@@ -92,7 +92,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             <span className="text-2xl font-black tracking-tight text-black dark:text-white">DiaMate</span>
           </div>
           <button className="md:hidden" onClick={() => setIsMobileMenuOpen(false)}>
-            <X className="w-6 h-6 text-black dark:text-white" />
+            <X className="w-6 h-6 text-black dark:text-white" suppressHydrationWarning={true} />
           </button>
         </div>
 
@@ -112,7 +112,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                     : `hover:bg-blue-100 dark:hover:bg-blue-900/40 ${isDark ? "text-blue-100 hover:text-white" : "text-black hover:text-black"}`
                 }`}
               >
-                <Icon className={`w-5 h-5 ${isActive ? "text-white" : ""}`} />
+                <Icon className={`w-5 h-5 ${isActive ? "text-white" : ""}`} suppressHydrationWarning={true} />
                 {item.name}
               </Link>
             )
@@ -125,7 +125,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border ${isDark ? "border-blue-700 hover:bg-blue-800 text-white" : "border-blue-300 hover:bg-blue-100 text-black"} transition-colors`}
           >
             <span className="font-bold text-base">Theme</span>
-            {isDark ? <Sun className="w-4 h-4 text-white" /> : <Moon className="w-4 h-4 text-black" />}
+            {isDark ? <Sun className="w-4 h-4 text-white" suppressHydrationWarning={true} /> : <Moon className="w-4 h-4 text-black" suppressHydrationWarning={true} />}
           </button>
           
           <button 
@@ -133,7 +133,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border border-red-200 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors`}
           >
             <span className="font-bold text-base">Log Out</span>
-            <LogOut className="w-4 h-4 text-red-500 dark:text-red-400" />
+            <LogOut className="w-4 h-4 text-red-500 dark:text-red-400" suppressHydrationWarning={true} />
           </button>
         </div>
       </aside>

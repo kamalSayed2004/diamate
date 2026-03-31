@@ -62,7 +62,7 @@ export default async function MedicineList({ patientId, token }: MedicineListPro
               <div className="mt-3 flex items-center justify-between text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">
                 <div className="flex items-center gap-1">
                   <span className="material-icons text-[12px] sm:text-[14px]">event</span>
-                  {new Date(med.startDate).toLocaleDateString()} - {new Date(med.endDate).toLocaleDateString()}
+                  {new Date(med.startDate).toLocaleDateString('en-US')} - {new Date(med.endDate).toLocaleDateString('en-US')}
                 </div>
                 {med.notes && (
                   <div className="flex items-center gap-1 truncate max-w-[90px] sm:max-w-[120px]">

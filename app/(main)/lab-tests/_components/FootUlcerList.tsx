@@ -51,7 +51,7 @@ export default async function FootUlcerList({ patientId, token }: FootUlcerListP
               <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                 <div className="flex items-center gap-1">
                   <span className="material-icons text-[14px]">event</span>
-                  {new Date(ulcer.uploadDate || Date.now()).toLocaleDateString()}
+                  {new Date(ulcer.uploadDate || Date.now()).toLocaleDateString('en-US')}
                 </div>
               </div>
               {ulcer.image && (

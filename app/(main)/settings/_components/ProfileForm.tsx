@@ -234,7 +234,7 @@ export default function ProfileForm({
           )}
           {validationErrors[name] && (
             <div className="text-red-500 text-xs flex mt-1">
-              <AlertCircle className="w-3 h-3 mr-1" />
+              <AlertCircle className="w-3 h-3 mr-1" suppressHydrationWarning={true} />
               {validationErrors[name]}
             </div>
           )}
@@ -276,8 +276,7 @@ export default function ProfileForm({
   );
 
   return (
-    <div className="xl:flex-1 p-4 md:p-8 xl:overflow-y-auto w-full">
-      <div className="max-w-5xl mx-auto mb-20 space-y-8">
+    <div className="max-w-5xl mx-auto space-y-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
           <div>
@@ -298,7 +297,7 @@ export default function ProfileForm({
         )}
         {success && (
           <div className="p-4 bg-slate-50 dark:bg-slate-500/10 border border-slate-300 rounded-2xl text-slate-700 dark:text-slate-400 text-sm flex items-center gap-3">
-            <CheckCircle2 className="w-5 h-5 shrink-0" />
+            <CheckCircle2 className="w-5 h-5 shrink-0" suppressHydrationWarning={true} />
             <p>Profile updated successfully!</p>
           </div>
         )}
@@ -323,11 +322,11 @@ export default function ProfileForm({
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <User className="w-10 h-10 sm:w-12 sm:h-12 text-slate-700 dark:text-slate-200 font-bold" />
+                  <User className="w-10 h-10 sm:w-12 sm:h-12 text-slate-700 dark:text-slate-200 font-bold" suppressHydrationWarning={true} />
                 )}
                 {isEditing && (
                   <div className="absolute inset-0 bg-slate-950/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                    <Camera className="text-white w-8 h-8" />
+                    <Camera className="text-white w-8 h-8" suppressHydrationWarning={true} />
                   </div>
                 )}
               </div>
@@ -496,7 +495,6 @@ export default function ProfileForm({
             </div>
           </div>
         </form>
-      </div>
     </div>
   );
 }

@@ -16,13 +16,17 @@ export default function QuickLogForm({ patientId, token }: QuickLogFormProps) {
   const [error, setError] = useState<string | null>(null);
 
   const [readingValue, setReadingValue] = useState("");
-  const [measurementTime, setMeasurementTime] = useState(() => {
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    return now.toISOString().slice(0, 16);
-  });
+  const [measurementTime, setMeasurementTime] = useState("");
   const [measurementType, setMeasurementType] = useState<number>(3);
   const [notes, setNotes] = useState("");
+
+  React.useEffect(() => {
+    if (!measurementTime) {
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      setMeasurementTime(now.toISOString().slice(0, 16));
+    }
+  }, []);
 
   const handleCancel = () => {
     setReadingValue("");

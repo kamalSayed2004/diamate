@@ -74,7 +74,7 @@ export default async function RecentHistoryLog({ patientId, token }: RecentHisto
                   </h3>
                   <div className="flex items-center gap-1 mt-0.5 sm:mt-1 text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">
                     <span className="material-icons text-[12px] sm:text-[14px]">event</span>
-                    {new Date(reading.measurementTime).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
+                    {new Date(reading.measurementTime).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}
                   </div>
                 </div>
               </div>

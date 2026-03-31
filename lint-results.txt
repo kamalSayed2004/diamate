@@ -1,0 +1,125 @@
+[0m[0m
+[0m[4m/mnt/data/coding/diamate/app/(auth)/login/page.tsx[24m[0m
+[0m  [2m96:19[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/mnt/data/coding/diamate/app/(auth)/register/page.tsx[24m[0m
+[0m   [2m77:47[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m186:45[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m228:19[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/mnt/data/coding/diamate/app/(main)/dashboard/_components/BloodGlucoseChart.tsx[24m[0m
+[0m  [2m29:33[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m29:41[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/mnt/data/coding/diamate/app/(main)/dashboard/_components/DashboardStats.tsx[24m[0m
+[0m  [2m29:33[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m29:41[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m32:60[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/mnt/data/coding/diamate/app/(main)/dashboard/_components/QuickLogForm.tsx[24m[0m
+[0m  [2m29:6[22m   [33mwarning[39m  React Hook React.useEffect has a missing dependency: 'measurementTime'. Either include it or remove the dependency array  [2mreact-hooks/exhaustive-deps[22m[0m
+[0m  [2m68:19[22m  [31merror[39m    Unexpected any. Specify a different type                                                                                  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/mnt/data/coding/diamate/app/(main)/dashboard/_components/RecentHistoryLog.tsx[24m[0m
+[0m  [2m26:13[22m  [31merror[39m  'data' is never reassigned. Use 'const' instead                  [2mprefer-const[22m[0m
+[0m  [2m28:37[22m  [31merror[39m  Unexpected any. Specify a different type                         [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m28:45[22m  [31merror[39m  Unexpected any. Specify a different type                         [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m85:21[22m  [31merror[39m  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m  [2m85:37[22m  [31merror[39m  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m[0m
+[0m[4m/mnt/data/coding/diamate/app/(main)/lab-tests/_components/FootUlcerForm.tsx[24m[0m
+[0m  [2m89:19[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/mnt/data/coding/diamate/app/(main)/lab-tests/_components/FootUlcerList.tsx[24m[0m
+[0m  [2m54:49[22m  [31merror[39m  Error: Cannot call impure function during render[0m
+[0m[0m
+[0m`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).[0m
+[0m[0m
+[0m/mnt/data/coding/diamate/app/(main)/lab-tests/_components/FootUlcerList.tsx:54:49[0m
+[0m  52 |                 <div className="flex items-center gap-1">[0m
+[0m  53 |                   <span className="material-icons text-[14px]">event</span>[0m
+[0m> 54 |                   {new Date(ulcer.uploadDate || Date.now()).toLocaleDateString('en-US')}[0m
+[0m     |                                                 ^^^^^^^^^^ Cannot call impure function[0m
+[0m  55 |                 </div>[0m
+[0m  56 |               </div>[0m
+[0m  57 |               {ulcer.image && (  [2mreact-hooks/purity[22m[0m
+[0m  [2m67:21[22m  [31merror[39m  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      [2mreact/no-unescaped-entities[22m[0m
+[0m  [2m67:35[22m  [31merror[39m  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      [2mreact/no-unescaped-entities[22m[0m
+[0m[0m
+[0m[4m/mnt/data/coding/diamate/app/(main)/lab-tests/_components/LabTestForm.tsx[24m[0m
+[0m  [2m94:19[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/mnt/data/coding/diamate/app/(main)/lab-tests/_components/LabTestList.tsx[24m[0m
+[0m  [2m56:46[22m  [31merror[39m  Error: Cannot call impure function during render[0m
+[0m[0m
+[0m`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).[0m
+[0m[0m
+[0m/mnt/data/coding/diamate/app/(main)/lab-tests/_components/LabTestList.tsx:56:46[0m
+[0m  54 |                 <div className="flex items-center gap-1">[0m
+[0m  55 |                   <span className="material-icons text-[12px] sm:text-[14px]">event</span>[0m
+[0m> 56 |                   {new Date(test.testDate || Date.now()).toLocaleDateString('en-US')}[0m
+[0m     |                                              ^^^^^^^^^^ Cannot call impure function[0m
+[0m  57 |                 </div>[0m
+[0m  58 |                 {test.notes && ([0m
+[0m  59 |                   <div className="flex items-center gap-1 truncate max-w-[120px]" title={test.notes}>  [2mreact-hooks/purity[22m[0m
+[0m[0m
+[0m[4m/mnt/data/coding/diamate/app/(main)/lab-tests/_components/LabTestsClient.tsx[24m[0m
+[0m  [2m6:8[22m  [33mwarning[39m  'LabTestList' is defined but never used    [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m7:8[22m  [33mwarning[39m  'FootUlcerList' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4m/mnt/data/coding/diamate/app/(main)/layout.tsx[24m[0m
+[0m  [2m17:8[22m  [31merror[39m  Error: Calling setState synchronously within an effect can trigger cascading renders[0m
+[0m[0m
+[0mEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:[0m
+[0m* Update external systems with the latest state from React.[0m
+[0m* Subscribe for updates from some external system, calling setState in a callback function when external state changes.[0m
+[0m[0m
+[0mCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).[0m
+[0m[0m
+[0m/mnt/data/coding/diamate/app/(main)/layout.tsx:17:8[0m
+[0m  15 |     const savedTheme = localStorage.getItem("theme");[0m
+[0m  16 |     if (savedTheme === "dark") {[0m
+[0m> 17 |        setDarkMode("dark");[0m
+[0m     |        ^^^^^^^^^^^ Avoid calling setState() directly within an effect[0m
+[0m  18 |        document.body.classList.add("dark");[0m
+[0m  19 |     } else if (savedTheme === "light") {[0m
+[0m  20 |        setDarkMode("light");  [2mreact-hooks/set-state-in-effect[22m[0m
+[0m[0m
+[0m[4m/mnt/data/coding/diamate/app/(main)/meal/_components/AddMealForm.tsx[24m[0m
+[0m  [2m55:14[22m  [33mwarning[39m  'e' is defined but never used             [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m85:19[22m  [31merror[39m    Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/mnt/data/coding/diamate/app/(main)/meal/_components/MealList.tsx[24m[0m
+[0m  [2m2:10[22m  [33mwarning[39m  'Loader2' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4m/mnt/data/coding/diamate/app/(main)/meal/page.tsx[24m[0m
+[0m  [2m7:11[22m  [33mwarning[39m  'Meal' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4m/mnt/data/coding/diamate/app/(main)/medicine/_components/AddMedicineForm.tsx[24m[0m
+[0m  [2m77:19[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/mnt/data/coding/diamate/app/(main)/medicine/_components/MedicineList.tsx[24m[0m
+[0m  [2m2:10[22m  [33mwarning[39m  'Loader2' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4m/mnt/data/coding/diamate/app/(main)/settings/_components/ChangePasswordForm.tsx[24m[0m
+[0m  [2m72:19[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/mnt/data/coding/diamate/app/(main)/settings/_components/ProfileForm.tsx[24m[0m
+[0m   [2m48:58[22m  [31merror[39m    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m84:21[22m  [31merror[39m    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m156:19[22m  [31merror[39m    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m315:19[22m  [33mwarning[39m  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  [2m@next/next/no-img-element[22m[0m
+[0m[0m
+[0m[4m/mnt/data/coding/diamate/app/(main)/settings/page.tsx[24m[0m
+[0m  [2m59:14[22m  [33mwarning[39m  'err' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4m/mnt/data/coding/diamate/app/layout.tsx[24m[0m
+[0m  [2m39:9[22m  [33mwarning[39m  Custom fonts not added in `pages/_document.js` will only load for a single page. This is discouraged. See: https://nextjs.org/docs/messages/no-page-custom-font  [2m@next/next/no-page-custom-font[22m[0m
+[0m  [2m40:9[22m  [33mwarning[39m  Custom fonts not added in `pages/_document.js` will only load for a single page. This is discouraged. See: https://nextjs.org/docs/messages/no-page-custom-font  [2m@next/next/no-page-custom-font[22m[0m
+[0m[0m
+[0m[4m/mnt/data/coding/diamate/app/page.tsx[24m[0m
+[0m  [2m5:29[22m  [33mwarning[39m  'Sparkles' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[31m[1m✖ 40 problems (28 errors, 12 warnings)[22m[39m[0m
+[0m[31m[1m[22m[39m[31m[1m  1 error and 0 warnings potentially fixable with the `--fix` option.[22m[39m[0m
+[0m[31m[1m[22m[39m[0m

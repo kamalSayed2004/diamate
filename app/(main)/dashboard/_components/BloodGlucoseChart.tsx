@@ -95,7 +95,7 @@ export default async function BloodGlucoseChart({ patientId, token }: BloodGluco
                   
                   {/* X-axis Footer Label */}
                   <div className="absolute -bottom-5 sm:-bottom-6 text-[8px] sm:text-[10px] md:text-xs text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap -rotate-45 origin-top-left translate-y-1 sm:translate-y-0 sm:rotate-0 sm:truncate w-full text-center">
-                     {new Date(d.measurementTime).toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' })}
+                     {new Date(d.measurementTime).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' })}
                   </div>
                 </div>
               );

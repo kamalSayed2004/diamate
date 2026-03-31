@@ -1,6 +1,7 @@
 import React, { Suspense } from "react";
 import { cookies } from "next/headers";
 import ProfileForm from "./_components/ProfileForm";
+import ChangePasswordForm from "./_components/ChangePasswordForm";
 import { AlertCircle, Loader2 } from "lucide-react";
 
 async function ProfileFormWrapper() {
@@ -73,7 +74,14 @@ async function ProfileFormWrapper() {
     );
   }
 
-  return <ProfileForm patientId={patientId} token={token} initialData={initialData} />;
+  return (
+    <div className="xl:flex-1 p-4 md:p-8 xl:overflow-y-auto w-full">
+      <div className="max-w-5xl mx-auto space-y-8 pb-10">
+        <ProfileForm patientId={patientId} token={token} initialData={initialData} />
+        <ChangePasswordForm token={token} />
+      </div>
+    </div>
+  );
 }
 
 export default function SettingsPage() {

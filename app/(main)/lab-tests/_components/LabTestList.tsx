@@ -53,7 +53,7 @@ export default async function LabTestList({ patientId, token }: LabTestListProps
               <div className="flex items-center justify-between text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">
                 <div className="flex items-center gap-1">
                   <span className="material-icons text-[12px] sm:text-[14px]">event</span>
-                  {new Date(test.testDate || Date.now()).toLocaleDateString()}
+                  {new Date(test.testDate || Date.now()).toLocaleDateString('en-US')}
                 </div>
                 {test.notes && (
                   <div className="flex items-center gap-1 truncate max-w-[120px]" title={test.notes}>
