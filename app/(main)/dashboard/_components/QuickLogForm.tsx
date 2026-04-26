@@ -50,21 +50,26 @@ export default function QuickLogForm({ patientId, token }: QuickLogFormProps) {
       reading_value: parseFloat(readingValue),
       measurementTime: new Date(measurementTime).toISOString(),
       measurementType: measurementType,
-      notes
+      notes,
     };
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/BloodGlucoseReading/AddReadingForPatient`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        body: JSON.stringify(payload),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_API}/BloodGlucoseReading/AddReadingForPatient`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        },
+      );
 
       if (!res.ok) throw new Error("Failed to add reading");
 
       handleCancel();
       router.refresh();
-
     } catch (err: any) {
       setError(err.message || "An error occurred");
     } finally {
@@ -80,8 +85,12 @@ export default function QuickLogForm({ patientId, token }: QuickLogFormProps) {
 
       <div className="px-4 sm:px-6 md:px-8 py-5 sm:py-6 border-b border-slate-100 dark:border-slate-800 bg-transparent shrink-0">
         <div>
-          <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">Quick Log</h2>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Record a new glucose reading</p>
+          <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+            Quick Log
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Record a new glucose reading
+          </p>
         </div>
       </div>
 
@@ -94,10 +103,14 @@ export default function QuickLogForm({ patientId, token }: QuickLogFormProps) {
 
         <div className="space-y-4 sm:space-y-5">
           <div>
-            <label className="block text-[11px] sm:text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5 sm:mb-2">Reading Value (mg/dL) <span className="text-red-500">*</span></label>
+            <label className="block text-[11px] sm:text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5 sm:mb-2">
+              Reading Value (mg/dL) <span className="text-red-500">*</span>
+            </label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#259ee4]">
-                <span className="material-icons text-lg sm:text-xl shadow-sm">water_drop</span>
+                <span className="material-icons text-lg sm:text-xl shadow-sm">
+                  water_drop
+                </span>
               </span>
               <input
                 className="w-full pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-[#259ee4] focus:border-transparent outline-none transition-all placeholder-slate-400 dark:text-white shadow-sm"
@@ -111,7 +124,9 @@ export default function QuickLogForm({ patientId, token }: QuickLogFormProps) {
           </div>
 
           <div>
-            <label className="block text-[11px] sm:text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5 sm:mb-2">Timing Protocol</label>
+            <label className="block text-[11px] sm:text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5 sm:mb-2">
+              Timing Protocol
+            </label>
             <div className="relative">
               <select
                 className="block w-full pl-4 pr-10 py-2.5 sm:py-3 text-[13px] sm:text-sm sm:text-base border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-[#259ee4] focus:border-[#259ee4] rounded-xl bg-white dark:bg-slate-900 dark:text-white appearance-none border shadow-sm"
@@ -129,7 +144,9 @@ export default function QuickLogForm({ patientId, token }: QuickLogFormProps) {
           </div>
 
           <div>
-            <label className="block text-[11px] sm:text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5 sm:mb-2">Time Recorded <span className="text-red-500">*</span></label>
+            <label className="block text-[11px] sm:text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5 sm:mb-2">
+              Time Recorded <span className="text-red-500">*</span>
+            </label>
             <div className="relative border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
               <input
                 className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base bg-transparent focus:ring-2 focus:ring-[#259ee4] focus:border-transparent outline-none transition-all dark:text-white [color-scheme:light] dark:[color-scheme:dark]"
@@ -141,7 +158,9 @@ export default function QuickLogForm({ patientId, token }: QuickLogFormProps) {
           </div>
 
           <div>
-            <label className="block text-[11px] sm:text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5 sm:mb-2">Additional Notes</label>
+            <label className="block text-[11px] sm:text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5 sm:mb-2">
+              Additional Notes
+            </label>
             <textarea
               className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-[#259ee4] focus:border-transparent outline-none transition-all dark:text-white resize-none shadow-sm"
               rows={2}
@@ -160,12 +179,18 @@ export default function QuickLogForm({ patientId, token }: QuickLogFormProps) {
           disabled={loadingSubmit}
           className="w-full py-3 sm:py-3.5 rounded-xl bg-gradient-to-r from-blue-500 to-[#259ee4] hover:from-blue-600 hover:to-blue-500 text-white font-bold text-[13px] sm:text-md shadow-md shadow-[#259ee4]/30 transition-all flex items-center justify-center gap-2 disabled:opacity-70"
         >
-          {loadingSubmit ? <Loader2 className="w-5 h-5 animate-spin" /> : <span className="material-icons text-lg sm:text-xl">add_circle</span>}
+          {loadingSubmit ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            <span className="material-icons text-lg sm:text-xl">
+              add_circle
+            </span>
+          )}
           Log Reading
         </button>
-        <button 
-          type="button" 
-          onClick={handleCancel} 
+        <button
+          type="button"
+          onClick={handleCancel}
           className="w-full py-2 sm:py-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold text-[11px] sm:text-sm transition-colors text-center"
         >
           Clear Form

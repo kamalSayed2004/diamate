@@ -1,7 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { Loader2, ShieldCheck, Lock, AlertCircle, CheckCircle2 } from "lucide-react";
+import {
+  Loader2,
+  ShieldCheck,
+  Lock,
+  AlertCircle,
+  CheckCircle2,
+} from "lucide-react";
 
 interface ChangePasswordFormProps {
   token: string;
@@ -18,6 +24,9 @@ export default function ChangePasswordForm({ token }: ChangePasswordFormProps) {
     confirmPassword: "",
   });
 
+  const passwordRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -30,23 +39,34 @@ export default function ChangePasswordForm({ token }: ChangePasswordFormProps) {
     setSuccess(false);
     setError(null);
 
+    if (!formData.currentPassword.trim()) {
+      setError("Current password is required.");
+      return;
+    }
+
     if (formData.newPassword !== formData.confirmPassword) {
       setError("New passwords do not match.");
       return;
     }
 
-    if (formData.newPassword.length < 6) {
-      setError("New password must be at least 6 characters long.");
+    if (!passwordRegex.test(formData.newPassword)) {
+      setError(
+        "Password must be at least 8 characters, include 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character (@$!%*?&).",
+      );
+      return;
+    }
+
+    if (formData.newPassword === formData.currentPassword) {
+      setError("New password must be different from the current password.");
       return;
     }
 
     setLoading(true);
-
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BASE_API}/Account/ChangePassword`,
         {
-          method: "PUT",
+          method: "PATCH",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -60,7 +80,9 @@ export default function ChangePasswordForm({ token }: ChangePasswordFormProps) {
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        throw new Error(data.message || "Failed to change password. Please check your current password.");
+        throw new Error(
+          data.message || data.error || "Failed to update password.",
+        );
       }
 
       setSuccess(true);
@@ -70,20 +92,27 @@ export default function ChangePasswordForm({ token }: ChangePasswordFormProps) {
         confirmPassword: "",
       });
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "An unexpected error occurred.");
+      setError(
+        err instanceof Error ? err.message : "An unexpected error occurred.",
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const inputClass = "w-full p-3.5 text-lg rounded-xl border bg-slate-50/50 dark:bg-slate-900/40 text-black dark:text-white placeholder-black/40 dark:placeholder-white/40 focus:outline-none focus:border-slate-500 transition-colors border-slate-200 dark:border-slate-800";
-  const labelClass = "block text-base font-bold text-black dark:text-slate-50 mb-2.5";
+  const inputClass =
+    "w-full p-3.5 text-lg rounded-xl border bg-slate-50/50 dark:bg-slate-900/40 text-black dark:text-white placeholder-black/40 dark:placeholder-white/40 focus:outline-none focus:border-slate-500 transition-colors border-slate-200 dark:border-slate-800";
+  const labelClass =
+    "block text-base font-bold text-black dark:text-slate-50 mb-2.5";
 
   return (
     <div className="bg-white/60 dark:bg-slate-950/40 backdrop-blur-xl rounded-3xl border border-slate-200/60 dark:border-slate-800/60 p-5 sm:p-6 md:p-8 shadow-sm">
       <div className="flex items-center gap-3 mb-6 sm:mb-8 border-b border-slate-200 dark:border-slate-800 pb-4">
         <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-xl">
-          <ShieldCheck className="w-6 h-6 text-blue-600 dark:text-blue-400" suppressHydrationWarning={true} />
+          <ShieldCheck
+            className="w-6 h-6 text-blue-600 dark:text-blue-400"
+            suppressHydrationWarning={true}
+          />
         </div>
         <h3 className="text-xl sm:text-2xl font-bold text-black dark:text-white leading-none">
           Security & Password
@@ -92,14 +121,20 @@ export default function ChangePasswordForm({ token }: ChangePasswordFormProps) {
 
       {error && (
         <div className="mb-6 p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-900/50 rounded-2xl text-red-600 dark:text-red-400 text-sm flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
-          <AlertCircle className="w-5 h-5 shrink-0" suppressHydrationWarning={true} />
+          <AlertCircle
+            className="w-5 h-5 shrink-0"
+            suppressHydrationWarning={true}
+          />
           <p>{error}</p>
         </div>
       )}
 
       {success && (
         <div className="mb-6 p-4 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-900/50 rounded-2xl text-emerald-600 dark:text-emerald-400 text-sm flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
-          <CheckCircle2 className="w-5 h-5 shrink-0" suppressHydrationWarning={true} />
+          <CheckCircle2
+            className="w-5 h-5 shrink-0"
+            suppressHydrationWarning={true}
+          />
           <p>Password changed successfully!</p>
         </div>
       )}
@@ -176,7 +211,17 @@ export default function ChangePasswordForm({ token }: ChangePasswordFormProps) {
             disabled={loading}
             className="w-full md:w-auto flex items-center justify-center gap-2 px-8 py-3.5 text-lg rounded-xl font-bold transition-all bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" suppressHydrationWarning={true} /> : <ShieldCheck className="w-5 h-5" suppressHydrationWarning={true} />}
+            {loading ? (
+              <Loader2
+                className="w-5 h-5 animate-spin"
+                suppressHydrationWarning={true}
+              />
+            ) : (
+              <ShieldCheck
+                className="w-5 h-5"
+                suppressHydrationWarning={true}
+              />
+            )}
             Update Password
           </button>
         </div>

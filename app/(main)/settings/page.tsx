@@ -7,7 +7,10 @@ import { AlertCircle, Loader2 } from "lucide-react";
 async function ProfileFormWrapper() {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value || "";
-  const patientIdStr = cookieStore.get("patientId")?.value || cookieStore.get("DiamateTokenId")?.value || "0";
+  const patientIdStr =
+    cookieStore.get("patientId")?.value ||
+    cookieStore.get("DiamateTokenId")?.value ||
+    "0";
   const patientId = Number(patientIdStr);
 
   let initialData = {
@@ -31,24 +34,35 @@ async function ProfileFormWrapper() {
 
   if (patientId > 0 && token) {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/Patients/GetPatient/${patientId}`, {
-        headers: { "Authorization": `Bearer ${token}` },
-        cache: 'no-store'
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_API}/Patients/GetPatient/${patientId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: "no-store",
+        },
+      );
       if (res.ok) {
         const data = await res.json();
         initialData = {
           firstName: data.firstName || "",
           lastName: data.lastName || "",
-          dateOfBirth: (data.dateOfBirth && !data.dateOfBirth.startsWith('0001-01-01')) ? data.dateOfBirth.split('T')[0] : "",
+          dateOfBirth:
+            data.dateOfBirth && !data.dateOfBirth.startsWith("0001-01-01")
+              ? data.dateOfBirth.split("T")[0]
+              : "",
           gender: typeof data.gender === "number" ? data.gender : 0,
           address: data.address || "",
           phone: data.phone || "",
           homePhone: data.homePhone || "",
           email: data.email || "",
           profileImage: data.profileImage || "",
-          dateOfDiagnosis: (data.dateOfDiagnosis && !data.dateOfDiagnosis.startsWith('0001-01-01')) ? data.dateOfDiagnosis.split('T')[0] : "",
-          diabetesType: typeof data.diabetesType === "number" ? data.diabetesType : 1,
+          dateOfDiagnosis:
+            data.dateOfDiagnosis &&
+            !data.dateOfDiagnosis.startsWith("0001-01-01")
+              ? data.dateOfDiagnosis.split("T")[0]
+              : "",
+          diabetesType:
+            typeof data.diabetesType === "number" ? data.diabetesType : 1,
           weight: data.weight || 0,
           height: data.height || 0,
           notes: data.notes || "",
@@ -77,7 +91,11 @@ async function ProfileFormWrapper() {
   return (
     <div className="xl:flex-1 p-4 md:p-8 xl:overflow-y-auto w-full">
       <div className="max-w-5xl mx-auto space-y-8 pb-10">
-        <ProfileForm patientId={patientId} token={token} initialData={initialData} />
+        <ProfileForm
+          patientId={patientId}
+          token={token}
+          initialData={initialData}
+        />
         <ChangePasswordForm token={token} />
       </div>
     </div>
@@ -86,12 +104,16 @@ async function ProfileFormWrapper() {
 
 export default function SettingsPage() {
   return (
-    <Suspense fallback={
-      <div className="xl:flex-1 p-4 md:p-8 xl:overflow-y-auto w-full flex flex-col items-center justify-center min-h-[50vh]">
-        <Loader2 className="w-10 h-10 animate-spin text-slate-400" />
-        <p className="mt-4 font-semibold text-slate-500">Loading Profile Details...</p>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="xl:flex-1 p-4 md:p-8 xl:overflow-y-auto w-full flex flex-col items-center justify-center min-h-[50vh]">
+          <Loader2 className="w-10 h-10 animate-spin text-slate-400" />
+          <p className="mt-4 font-semibold text-slate-500">
+            Loading Profile Details...
+          </p>
+        </div>
+      }
+    >
       <ProfileFormWrapper />
     </Suspense>
   );

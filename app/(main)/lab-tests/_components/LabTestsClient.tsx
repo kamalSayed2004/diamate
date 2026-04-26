@@ -6,8 +6,6 @@ import FootUlcerForm from "./FootUlcerForm";
 import LabTestList from "./LabTestList";
 import FootUlcerList from "./FootUlcerList";
 
-
-
 interface LabTestsClientProps {
   patientId: number;
   token: string;
@@ -15,7 +13,12 @@ interface LabTestsClientProps {
   footUlcerList: React.ReactNode;
 }
 
-export default function LabTestsClient({ patientId, token, labTestList, footUlcerList }: LabTestsClientProps) {
+export default function LabTestsClient({
+  patientId,
+  token,
+  labTestList,
+  footUlcerList,
+}: LabTestsClientProps) {
   const [activeTab, setActiveTab] = useState<"lab" | "ulcer">("lab");
 
   if (patientId === 0) return null;
@@ -29,8 +32,12 @@ export default function LabTestsClient({ patientId, token, labTestList, footUlce
         {/* Header & Tabs */}
         <div className="px-5 sm:px-8 py-5 sm:py-6 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:justify-between sm:items-center sticky top-0 z-10 shrink-0 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md">
           <div className="mb-4 sm:mb-0">
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Health Records</h1>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Manage Lab Tests & Foot Ulcers</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+              Health Records
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+              Manage Lab Tests & Foot Ulcers
+            </p>
           </div>
 
           <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl overflow-hidden shadow-inner w-full sm:w-auto">
@@ -75,7 +82,9 @@ export default function LabTestsClient({ patientId, token, labTestList, footUlce
             Past {activeTab === "lab" ? "Lab Tests" : "Foot Ulcers"}
           </h2>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            {activeTab === "lab" ? "History of your lab results" : "History of uploaded ulcer images"}
+            {activeTab === "lab"
+              ? "History of your lab results"
+              : "History of uploaded ulcer images"}
           </p>
         </div>
 
