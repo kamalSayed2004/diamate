@@ -99,7 +99,7 @@ export default function AddMealForm({ patientId, token }: AddMealFormProps) {
   }
 
   return (
-    <div className="group relative w-full shrink-0 xl:shrink xl:flex-1 mx-auto xl:mx-0 max-w-3xl overflow-hidden rounded-[2rem] border shadow-sm transition duration-300 border-slate-200/90 bg-white/90 dark:border-slate-700/80 dark:bg-slate-900/70 backdrop-blur-sm hover:border-blue-200 dark:hover:border-emerald-400/45 flex flex-col xl:max-h-[calc(100vh-8rem)]">
+    <div className="group relative w-full min-h-0 shrink-0 xl:shrink xl:flex-1 mx-auto xl:mx-0 max-w-full xl:max-w-none overflow-hidden rounded-[2rem] border shadow-sm transition duration-300 border-slate-200/90 bg-white/90 dark:border-slate-700/80 dark:bg-slate-900/70 backdrop-blur-sm hover:border-blue-200 dark:hover:border-emerald-400/45 flex flex-col xl:h-full">
       <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500 via-emerald-400 to-green-500 opacity-90 z-20" />
 
       {/* Header */}

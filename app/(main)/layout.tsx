@@ -74,7 +74,7 @@ export default function MainLayout({
 
   return (
     <div
-      className={`flex h-[100dvh] font-[family-name:var(--font-geist-sans)] transition-colors duration-300 ${isDark ? "bg-blue-950 text-blue-50" : "bg-[#f0f9ff] text-black"} overflow-hidden relative`}
+      className={`flex min-h-screen w-full font-[family-name:var(--font-geist-sans)] transition-colors duration-300 ${isDark ? "bg-blue-950 text-blue-50" : "bg-[#f0f9ff] text-black"} overflow-hidden relative`}
       suppressHydrationWarning={true}
     >
       {/* Background Gradient */}
@@ -207,7 +207,7 @@ export default function MainLayout({
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 min-w-0 h-full overflow-y-auto relative z-10 flex flex-col md:pt-0 pt-[72px]">
+      <main className="flex-1 min-w-0 min-h-0 overflow-y-auto relative z-10 flex flex-col md:pt-0 pt-[72px] pb-6">
         {children}
       </main>
     </div>

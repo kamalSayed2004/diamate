@@ -42,7 +42,7 @@ export default async function MealList({ patientId, token }: MealListProps) {
     }
   }
   return (
-    <div className="group relative w-full shrink-0 xl:shrink xl:flex-1 xl:max-w-md overflow-hidden rounded-[2rem] border shadow-sm transition duration-300 border-slate-200/90 bg-white/90 dark:border-slate-700/80 dark:bg-slate-900/70 backdrop-blur-sm hover:border-emerald-200 dark:hover:border-emerald-400/45 flex flex-col min-h-[400px] xl:max-h-[calc(100vh-8rem)]">
+    <div className="group relative w-full min-h-0 shrink-0 xl:shrink xl:flex-1 xl:max-w-md overflow-hidden rounded-[2rem] border shadow-sm transition duration-300 border-slate-200/90 bg-white/90 dark:border-slate-700/80 dark:bg-slate-900/70 backdrop-blur-sm hover:border-emerald-200 dark:hover:border-emerald-400/45 flex flex-col xl:h-full">
       <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500 via-emerald-400 to-green-500 opacity-90 z-20" />
       <div className="px-5 py-4 sm:px-6 sm:py-5 border-b border-slate-100 dark:border-slate-800 sticky top-0 z-10 shrink-0 bg-white/50 dark:bg-slate-900/50 backdrop-blur">
         <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white font-[family-name:var(--font-geist-sans)]">
@@ -53,7 +53,7 @@ export default async function MealList({ patientId, token }: MealListProps) {
         </p>
       </div>
 
-      <div className="xl:flex-1 xl:overflow-y-auto p-4 flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-4 xl:flex-col [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full dark:[&::-webkit-scrollbar-thumb]:bg-slate-600">
+      <div className="xl:flex-1 xl:overflow-y-auto p-4 grid grid-cols-1 sm:grid-cols-2 gap-4 xl:grid-cols-1 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full dark:[&::-webkit-scrollbar-thumb]:bg-slate-600">
         {meals.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-slate-400 dark:text-slate-500 w-full shrink-0">
             <Utensils className="w-16 h-16 mb-3 opacity-20" />

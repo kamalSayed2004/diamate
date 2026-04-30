@@ -39,7 +39,7 @@ export default async function MedicineList({
     }
   }
   return (
-    <div className="group relative w-full xl:flex-1 xl:w-auto xl:max-w-md shrink-0 xl:shrink overflow-hidden rounded-[2rem] border shadow-sm transition duration-300 border-slate-200/90 bg-white/90 dark:border-slate-700/80 dark:bg-slate-900/70 backdrop-blur-sm hover:border-emerald-200 dark:hover:border-emerald-400/45 flex flex-col min-h-[400px] xl:max-h-[calc(100vh-8rem)]">
+    <div className="group relative w-full min-h-0 xl:flex-1 xl:w-auto xl:max-w-md shrink-0 xl:shrink overflow-hidden rounded-[2rem] border shadow-sm transition duration-300 border-slate-200/90 bg-white/90 dark:border-slate-700/80 dark:bg-slate-900/70 backdrop-blur-sm hover:border-emerald-200 dark:hover:border-emerald-400/45 flex flex-col xl:h-full">
       <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-600 opacity-90 z-20" />
       <div className="px-5 sm:px-6 py-4 sm:py-5 border-b border-slate-100 dark:border-slate-800 sticky top-0 z-10 shrink-0 bg-white/50 dark:bg-slate-900/50 backdrop-blur">
         <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white font-[family-name:var(--font-geist-sans)]">
