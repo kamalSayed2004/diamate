@@ -74,7 +74,7 @@ export default function MainLayout({
 
   return (
     <div
-      className={`flex min-h-screen w-full font-[family-name:var(--font-geist-sans)] transition-colors duration-300 ${isDark ? "bg-blue-950 text-blue-50" : "bg-[#f0f9ff] text-black"} overflow-hidden relative`}
+      className={`flex min-h-screen lg:h-screen w-full font-[family-name:var(--font-geist-sans)] transition-colors duration-300 ${isDark ? "bg-blue-950 text-blue-50" : "bg-[#f0f9ff] text-black"} overflow-hidden relative`}
       suppressHydrationWarning={true}
     >
       {/* Background Gradient */}
@@ -88,7 +88,7 @@ export default function MainLayout({
 
       {/* Mobile Header (Hamburger) */}
       <div
-        className={`md:hidden absolute top-0 left-0 right-0 z-30 flex items-center justify-between p-4 border-b ${isDark ? "border-blue-800 bg-blue-950/80" : "border-blue-200 bg-white/80"} backdrop-blur-md`}
+        className={`md:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between p-4 border-b ${isDark ? "border-blue-800 bg-blue-950/90" : "border-blue-200 bg-white/90"} backdrop-blur-md`}
       >
         <div className="flex items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -207,7 +207,7 @@ export default function MainLayout({
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 min-w-0 min-h-0 overflow-y-auto relative z-10 flex flex-col md:pt-0 pt-[72px] pb-6">
+      <main className="flex-1 min-w-0 min-h-0 relative z-10 flex flex-col md:pt-0 pt-[72px] pb-6 overflow-y-auto lg:h-screen lg:max-h-screen lg:min-h-screen lg:pb-0">
         {children}
       </main>
     </div>
