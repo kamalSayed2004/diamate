@@ -26,8 +26,8 @@ export default function LabTestsClient({
   return (
     <div className="w-full min-h-0 p-3 sm:p-4 md:p-8 flex flex-col xl:flex-row gap-6 md:gap-8 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full dark:[&::-webkit-scrollbar-thumb]:bg-slate-600">
       {/* Main Form Container */}
-      <div className="group relative w-full min-h-0 shrink-0 xl:shrink xl:flex-1 mx-auto xl:mx-0 max-w-full xl:max-w-none overflow-hidden rounded-[2rem] border shadow-sm transition duration-300 border-slate-200/90 bg-white/90 dark:border-slate-700/80 dark:bg-slate-900/70 backdrop-blur-sm hover:border-violet-200 dark:hover:border-violet-400/45 flex flex-col xl:h-full">
-        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-violet-500 via-fuchsia-400 to-violet-600 opacity-90 z-20" />
+      <div className="group relative w-full min-h-0 shrink-0 xl:shrink xl:flex-1 mx-auto xl:mx-0 max-w-full xl:max-w-none overflow-hidden rounded-4xl border shadow-sm transition duration-300 border-slate-200/90 bg-white/90 dark:border-slate-700/80 dark:bg-slate-900/70 backdrop-blur-sm hover:border-violet-200 dark:hover:border-violet-400/45 flex flex-col xl:h-full">
+        <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-violet-500 via-fuchsia-400 to-violet-600 opacity-90 z-20" />
 
         {/* Header & Tabs */}
         <div className="px-5 sm:px-8 py-5 sm:py-6 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:justify-between sm:items-center sticky top-0 z-10 shrink-0 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md">
@@ -75,8 +75,8 @@ export default function LabTestsClient({
       </div>
 
       {/* Sidebar List Component */}
-      <div className="group relative w-full min-h-0 xl:flex-1 xl:w-auto xl:max-w-md shrink-0 xl:shrink overflow-hidden rounded-[2rem] border shadow-sm transition duration-300 border-slate-200/90 bg-white/90 dark:border-slate-700/80 dark:bg-slate-900/70 backdrop-blur-sm hover:border-violet-200 dark:hover:border-violet-400/45 flex flex-col xl:h-full">
-        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-violet-500 via-fuchsia-400 to-violet-600 opacity-90 z-20" />
+      <div className="group relative w-full min-h-0 xl:flex-1 xl:w-auto xl:max-w-md shrink-0 xl:shrink overflow-hidden rounded-4xl border shadow-sm transition duration-300 border-slate-200/90 bg-white/90 dark:border-slate-700/80 dark:bg-slate-900/70 backdrop-blur-sm hover:border-violet-200 dark:hover:border-violet-400/45 flex flex-col xl:h-full">
+        <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-violet-500 via-fuchsia-400 to-violet-600 opacity-90 z-20" />
         <div className="px-5 sm:px-6 py-5 border-b border-slate-100 dark:border-slate-800 sticky top-0 z-10 shrink-0 bg-white/50 dark:bg-slate-900/50 backdrop-blur">
           <h2 className="text-xl font-bold text-slate-900 dark:text-white capitalize">
             Past {activeTab === "lab" ? "Lab Tests" : "Foot Ulcers"}

@@ -172,28 +172,27 @@ export default function QuickLogForm({ patientId, token }: QuickLogFormProps) {
         </div>
       </div>
 
-      <div className="px-4 sm:px-6 md:px-8 py-4 sm:py-5 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-700 flex flex-col gap-2.5 sm:gap-3 shrink-0">
+      {/* Unified Action Footer - Following Medicine Page Structure */}
+      <div className="-mx-4 sm:-mx-6 md:-mx-8 px-4 sm:px-6 md:px-8 py-5 sm:py-6 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex flex-col-reverse sm:flex-row justify-end items-stretch sm:items-center gap-3 shrink-0 rounded-b-[2rem]">
+        <button
+          type="button"
+          onClick={handleCancel}
+          className="w-full sm:w-auto px-6 py-2.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold text-sm transition-colors text-center"
+        >
+          Clear Form
+        </button>
         <button
           type="button"
           onClick={handleSave}
           disabled={loadingSubmit}
-          className="w-full py-3 sm:py-3.5 rounded-xl bg-gradient-to-r from-blue-500 to-[#259ee4] hover:from-blue-600 hover:to-blue-500 text-white font-bold text-[13px] sm:text-md shadow-md shadow-[#259ee4]/30 transition-all flex items-center justify-center gap-2 disabled:opacity-70"
+          className="w-full sm:w-auto justify-center px-8 py-2.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-bold text-sm shadow-md shadow-blue-500/30 transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
         >
           {loadingSubmit ? (
             <Loader2 className="w-5 h-5 animate-spin" />
           ) : (
-            <span className="material-icons text-lg sm:text-xl">
-              add_circle
-            </span>
+            <span className="material-icons text-lg">add_circle</span>
           )}
           Log Reading
-        </button>
-        <button
-          type="button"
-          onClick={handleCancel}
-          className="w-full py-2 sm:py-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold text-[11px] sm:text-sm transition-colors text-center"
-        >
-          Clear Form
         </button>
       </div>
     </div>

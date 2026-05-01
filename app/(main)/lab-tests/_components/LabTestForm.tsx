@@ -107,8 +107,8 @@ export default function LabTestForm({ patientId, token }: LabTestFormProps) {
   };
 
   return (
-    <div className="flex flex-col min-h-0">
-      <div className="flex-1 space-y-4 sm:space-y-6 lg:space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300 [&_input[type=number]::-webkit-inner-spin-button]:appearance-none">
+    <div className="flex flex-col h-full animate-in fade-in slide-in-from-bottom-2 duration-300">
+      <div className="flex-1 space-y-6 sm:space-y-8 pb-10 [&_input[type=number]::-webkit-inner-spin-button]:appearance-none">
         {error && (
           <div className="p-4 bg-red-500/10 border border-red-500/50 rounded-xl text-red-600 text-sm font-medium">
             {error}
@@ -121,11 +121,11 @@ export default function LabTestForm({ patientId, token }: LabTestFormProps) {
               Test Name
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-violet-500">
                 <span className="material-icons text-xl">biotech</span>
               </span>
               <input
-                className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all placeholder-slate-400 dark:text-white"
+                className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all placeholder-slate-400 dark:text-white"
                 placeholder="e.g., Glucose, HbA1c..."
                 type="text"
                 value={testName}
@@ -139,7 +139,7 @@ export default function LabTestForm({ patientId, token }: LabTestFormProps) {
               Result Value
             </label>
             <input
-              className="w-full px-4 py-2.5 sm:py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none dark:text-white"
+              className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none dark:text-white"
               placeholder="e.g., 45"
               type="number"
               value={resultValue}
@@ -152,7 +152,7 @@ export default function LabTestForm({ patientId, token }: LabTestFormProps) {
               Normal Range
             </label>
             <input
-              className="w-full px-4 py-2.5 sm:py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none dark:text-white"
+              className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none dark:text-white"
               placeholder="e.g., 80-120"
               type="text"
               value={normalRange}
@@ -166,7 +166,7 @@ export default function LabTestForm({ patientId, token }: LabTestFormProps) {
             </label>
             <div className="relative border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900 overflow-hidden">
               <input
-                className="w-full px-4 py-2.5 sm:py-3 bg-transparent focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all dark:text-white [color-scheme:light] dark:[color-scheme:dark]"
+                className="w-full px-4 py-3 bg-transparent focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all dark:text-white [color-scheme:light] dark:[color-scheme:dark]"
                 type="date"
                 value={testDate}
                 onChange={(e) => setTestDate(e.target.value)}
@@ -178,7 +178,7 @@ export default function LabTestForm({ patientId, token }: LabTestFormProps) {
             <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5 sm:mb-2">
               Report Image <span className="text-red-500">*</span>
             </label>
-            <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-4 sm:p-6 text-center bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+            <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-6 text-center bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
               <input
                 type="file"
                 accept="image/*"
@@ -225,7 +225,7 @@ export default function LabTestForm({ patientId, token }: LabTestFormProps) {
               Notes
             </label>
             <textarea
-              className="w-full px-4 py-2.5 sm:py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all dark:text-white resize-none"
+              className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all dark:text-white resize-none"
               rows={3}
               placeholder="e.g., Blood sugar too low..."
               value={labNotes}
@@ -235,11 +235,12 @@ export default function LabTestForm({ patientId, token }: LabTestFormProps) {
         </div>
       </div>
 
-      <div className="mt-6 sm:mt-8 flex flex-col-reverse sm:flex-row justify-end items-stretch sm:items-center gap-3">
+      {/* Unified Action Footer - Following Medicine Page Structure Exactly */}
+      <div className="shrink-0 py-5 sm:py-6 border-t border-slate-100 dark:border-slate-800 flex flex-col-reverse sm:flex-row justify-end items-stretch sm:items-center gap-3">
         <button
           type="button"
           onClick={handleCancelLabTest}
-          className="px-6 py-2.5 sm:py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 text-slate-700 dark:bg-slate-950/50 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-800 font-semibold text-sm transition-colors text-center w-full sm:w-auto"
+          className="w-full sm:w-auto px-6 py-2.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold text-sm transition-colors text-center"
         >
           Cancel
         </button>
@@ -247,12 +248,12 @@ export default function LabTestForm({ patientId, token }: LabTestFormProps) {
           type="button"
           onClick={handleSaveLabTest}
           disabled={loadingSubmit}
-          className="px-8 py-2.5 sm:py-2.5 rounded-lg bg-violet-600 hover:bg-violet-700 text-white font-bold text-sm shadow-md shadow-violet-600/30 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed w-full sm:w-auto"
+          className="w-full sm:w-auto justify-center px-8 py-2.5 rounded-lg bg-violet-500 hover:bg-violet-600 text-white font-bold text-sm shadow-md shadow-violet-500/30 transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
         >
           {loadingSubmit ? (
             <Loader2 className="w-5 h-5 animate-spin" />
           ) : (
-            <span className="material-icons text-lg">check</span>
+            <span className="material-icons text-lg">check_circle</span>
           )}
           Save Test
         </button>
