@@ -128,57 +128,79 @@ export default function AddMealImageForm({
     }
 
     try {
-      let totalCalories = 0;
-      let totalProtein = 0;
-      let totalCarbs = 0;
-      let totalFats = 0;
+      const savedMeals = [];
 
+      // Process each ingredient individually
       for (const item of detectedItems) {
         const amountKg = Number(ingredientsAmounts[item]);
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_API}/Food/GetFoodByName?name=${encodeURIComponent(item)}`,
+
+        // Fetch macronutrient data from macros API
+        const macrosRes = await fetch(
+          `${process.env.NEXT_PUBLIC_INGREDIENT_API}${encodeURIComponent(item)}`,
           {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            method: "GET",
           },
         );
 
-        if (!res.ok) continue;
+        if (!macrosRes.ok) {
+          console.warn(`Failed to fetch macros for ${item}`);
+          continue;
+        }
 
-        const foodData = await res.json();
-        totalCalories += (foodData.caloriesPer100g || 0) * 10 * amountKg;
-        totalProtein += (foodData.protein_G || 0) * 10 * amountKg;
-        totalCarbs += (foodData.carbs_G || 0) * 10 * amountKg;
-        totalFats += (foodData.fat_G || 0) * 10 * amountKg;
+        const macrosData = await macrosRes.json();
+
+        // Calculate nutritional values based on amount in kg (1kg = 1000g)
+        const caloriesPer100g = macrosData.calories_per_100g || 0;
+        const proteinG = macrosData.protein_g || 0;
+        const carbsG = macrosData.carbs_g || 0;
+        const fatG = macrosData.fat_g || 0;
+
+        // Convert kg to grams and calculate total nutrients
+        const totalGrams = amountKg * 1000;
+        const calories = Math.round((caloriesPer100g / 100) * totalGrams);
+        const protein = Math.round((proteinG / 100) * totalGrams * 100) / 100;
+        const carbs = Math.round((carbsG / 100) * totalGrams * 100) / 100;
+        const fats = Math.round((fatG / 100) * totalGrams * 100) / 100;
+
+        // Create meal payload for each ingredient
+        const mealPayload = {
+          patientId,
+          name: `${name} - ${item}`,
+          read_date: formattedDate,
+          calories,
+          protein,
+          carbs,
+          fats,
+          notes: `${notes || ""}${notes ? " | " : ""}Amount: ${amountKg} kg`,
+        };
+
+        // Save each ingredient as a separate meal
+        const saveMealRes = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_API}/Meal/AddNewMeal`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(mealPayload),
+          },
+        );
+
+        if (!saveMealRes.ok) {
+          throw new Error(`Failed to save meal for ingredient: ${item}`);
+        }
+
+        savedMeals.push(item);
       }
 
-      const payload = {
-        patientId,
-        name,
-        read_date: formattedDate,
-        calories: Math.round(totalCalories),
-        protein: Math.round(totalProtein * 100) / 100,
-        carbs: Math.round(totalCarbs * 100) / 100,
-        fats: Math.round(totalFats * 100) / 100,
-        notes: notes || `AI Detected: ${detectedItems.join(", ")}`,
-      };
+      if (savedMeals.length === 0) {
+        throw new Error("No ingredients were saved successfully");
+      }
 
-      const resMeal = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_API}/Meal/AddNewMeal`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
-        },
+      setSuccess(
+        `AI Meal saved successfully! ${savedMeals.length} ingredient(s) added.`,
       );
-
-      if (!resMeal.ok) throw new Error("Failed to save meal");
-
-      setSuccess("AI Meal saved successfully!");
       handleCancel();
       router.refresh();
     } catch (err: any) {
