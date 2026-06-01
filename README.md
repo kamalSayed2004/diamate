@@ -51,9 +51,12 @@ Create `.env.local` in the project root with at least:
 NEXT_PUBLIC_BASE_API=https://your-api-url.com/api
 # (optional) Next.js default options
 NEXTAUTH_URL=http://localhost:3000
+# (optional) Comma-separated paths to skip auth/CORS protection
+SKIP_CORS_PATHS=/health,/status
 ```
 
 The app uses `NEXT_PUBLIC_BASE_API` for API requests in components such as:
+
 - `app/(main)/dashboard/_components/DashboardStats.tsx`
 - `app/(main)/dashboard/_components/BloodGlucoseChart.tsx`
 - `app/(main)/meal/_components/MealList.tsx`
@@ -125,5 +128,4 @@ Include change summary, issue link, and screenshots for UI updates.
 
 ## 📄 License
 
-MIT (or add your license) 
-
+MIT (or add your license)

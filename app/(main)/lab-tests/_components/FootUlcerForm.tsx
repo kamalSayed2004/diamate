@@ -18,8 +18,6 @@ export default function FootUlcerForm({
   const [error, setError] = useState<string | null>(null);
 
   const [ulcerUploadDate, setUlcerUploadDate] = useState("");
-  const [aiDetectionResult, setAiDetectionResult] = useState("");
-  const [aiConfidence, setAiConfidence] = useState("");
   const [ulcerNotes, setUlcerNotes] = useState("");
   const [ulcerImageBase64, setUlcerImageBase64] = useState("");
   const ulcerImageInputRef = useRef<HTMLInputElement>(null);
@@ -56,8 +54,6 @@ export default function FootUlcerForm({
 
   const handleCancelUlcer = () => {
     setUlcerUploadDate("");
-    setAiDetectionResult("");
-    setAiConfidence("");
     setUlcerNotes("");
     setUlcerImageBase64("");
     if (ulcerImageInputRef.current) ulcerImageInputRef.current.value = "";
@@ -67,22 +63,51 @@ export default function FootUlcerForm({
   const handleSaveUlcer = async () => {
     if (!ulcerImageBase64) return setError("Foot ulcer image is required.");
     if (!ulcerUploadDate) return setError("Please select an upload date.");
+    if (!process.env.NEXT_PUBLIC_BASE_API)
+      return setError("Base API endpoint is not configured.");
 
     setLoadingSubmit(true);
     setError(null);
 
-    const payload = {
-      patientId,
-      image: ulcerImageBase64,
-      uploadDate: new Date(ulcerUploadDate).toISOString(),
-      ai_detectionResult: aiDetectionResult,
-      aiConfidence: Number(aiConfidence),
-      notes: ulcerNotes,
-    };
-
     try {
+      const dfuRes = await fetch(process.env.NEXT_PUBLIC_DFU_API, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ image_b64: ulcerImageBase64 }),
+      });
+
+      const dfuText = await dfuRes.text();
+      if (!dfuRes.ok) {
+        let errorMessage = "DFU detection failed.";
+        try {
+          const dfuJson = JSON.parse(dfuText);
+          errorMessage = dfuJson.error || dfuJson.message || errorMessage;
+        } catch {
+          errorMessage = dfuText || errorMessage;
+        }
+        throw new Error(errorMessage);
+      }
+
+      const dfuData = dfuText ? JSON.parse(dfuText) : null;
+      const overlayB64 = dfuData?.overlay_b64;
+
+      if (!overlayB64) {
+        throw new Error("DFU response did not return overlay data.");
+      }
+
+      const payload = {
+        patientId,
+        image: ulcerImageBase64,
+        uploadDate: ulcerUploadDate,
+        ai_detectionResult: overlayB64,
+        notes: ulcerNotes,
+      };
+
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_API}/FootUlcerImage/AddFootUlcerImageForPatient`,
+        process.env.NEXT_PUBLIC_BASE_API +
+          "/FootUlcerImage/AddFootUlcerImageForPatient",
         {
           method: "POST",
           headers: {
@@ -93,7 +118,21 @@ export default function FootUlcerForm({
         },
       );
 
-      if (!res.ok) throw new Error("Failed to add Foot Ulcer Image");
+      console.log("Foot Ulcer Image Upload Response:", res);
+      console.log(payload);
+
+      const resText = await res.text();
+      if (!res.ok) {
+        let errorMessage = "Failed to add Foot Ulcer Image";
+        try {
+          const resJson = JSON.parse(resText || "{}");
+          errorMessage =
+            resJson.error || resJson.message || JSON.stringify(resJson);
+        } catch {
+          errorMessage = resText || errorMessage;
+        }
+        throw new Error(errorMessage);
+      }
 
       handleCancelUlcer();
       router.refresh();
@@ -172,40 +211,6 @@ export default function FootUlcerForm({
                 onChange={(e) => setUlcerUploadDate(e.target.value)}
               />
             </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5 sm:mb-2">
-              AI Detection Result
-            </label>
-            <div className="relative group">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-violet-500">
-                <span className="material-icons text-xl">psychology</span>
-              </span>
-              <input
-                className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all dark:text-white placeholder-slate-400"
-                placeholder="e.g., strange points..."
-                type="text"
-                value={aiDetectionResult}
-                onChange={(e) => setAiDetectionResult(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5 sm:mb-2">
-              AI Confidence
-            </label>
-            <input
-              className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none dark:text-white"
-              placeholder="e.g., 0.9"
-              type="number"
-              step="0.01"
-              min="0"
-              max="1"
-              value={aiConfidence}
-              onChange={(e) => setAiConfidence(e.target.value)}
-            />
           </div>
 
           <div className="md:col-span-2">

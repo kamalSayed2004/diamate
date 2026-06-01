@@ -5,7 +5,6 @@ interface FootUlcer {
   image: string;
   uploadDate: string;
   ai_detectionResult: string;
-  aiConfidence: number;
   notes: string;
 }
 
@@ -57,10 +56,12 @@ export default async function FootUlcerList({
             <div className="flex justify-between items-start">
               <div>
                 <h3 className="text-sm sm:text-base font-bold text-slate-800 dark:text-white truncate max-w-[200px] capitalize">
-                  {ulcer.ai_detectionResult || "Detection Result"}
+                  Foot Ulcer Scan
                 </h3>
                 <p className="text-xs sm:text-sm font-medium text-violet-500">
-                  Confidence: {ulcer.aiConfidence}
+                  {ulcer.ai_detectionResult
+                    ? "AI overlay available"
+                    : "No AI overlay available"}
                 </p>
               </div>
             </div>
@@ -96,7 +97,7 @@ export default async function FootUlcerList({
                     chat_bubble_outline
                   </span>
                   <p className="text-xs text-slate-600 dark:text-slate-300 italic leading-snug">
-                    "{ulcer.notes}"
+                    &quot;{ulcer.notes}&quot;
                   </p>
                 </div>
               )}
