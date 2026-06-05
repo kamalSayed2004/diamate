@@ -97,11 +97,32 @@ export default function FootUlcerForm({
         throw new Error("DFU response did not return overlay data.");
       }
 
+      const aiDetectionResult = {
+        ulcer_pixels: dfuData?.ulcer_pixels ?? null,
+        total_pixels: dfuData?.total_pixels ?? null,
+        ulcer_coverage: dfuData?.ulcer_coverage ?? null,
+        ulcer_detected:
+          typeof dfuData?.ulcer_detected === "boolean"
+            ? dfuData.ulcer_detected
+            : Boolean(dfuData?.ulcer_pixels > 0),
+      };
+
+      const ulcerPercent =
+        aiDetectionResult.total_pixels && aiDetectionResult.total_pixels > 0
+          ? (
+              (aiDetectionResult.ulcer_pixels /
+                aiDetectionResult.total_pixels) *
+              100
+            ).toFixed(2)
+          : "0.00";
+
+      const ai_detection = `Ulcer Detected: ${aiDetectionResult.ulcer_detected}, Ulcer Coverage: ${aiDetectionResult.ulcer_coverage ?? 0}%, Ulcer Percent: ${ulcerPercent}%`;
+
       const payload = {
         patientId,
-        image: ulcerImageBase64,
+        image: overlayB64,
         uploadDate: ulcerUploadDate,
-        ai_detectionResult: overlayB64,
+        ai_detectionResult: ai_detection,
         notes: ulcerNotes,
       };
 

@@ -1,232 +1,272 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
 import {
-  Send,
-  Paperclip,
-  FileText,
-  Plus,
-  MessageSquare,
-  X,
-  Menu,
-  Bot,
-  User,
-  MoreVertical,
-  Trash2,
-} from "lucide-react";
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from "react";
 
-type Message = {
-  id: string;
-  role: "user" | "bot";
-  content: string;
-  attachment?: {
-    name: string;
-    size: string;
-  };
-  timestamp: Date;
-};
-
-type ChatSession = {
-  id: string;
-  title: string;
-  date: string;
-};
-
-export default function ChatPage() {
-  const [messages, setMessages] = useState<Message[]>([
+const ChatPage = () => {
+  const [sessions, setSessions] = useState<string[]>([]);
+  const [selectedSession, setSelectedSession] = useState<string>("");
+  const [sessionMessages, setSessionMessages] = useState<
     {
-      id: "1",
-      role: "bot",
-      content:
-        "Hello! I'm your DiaMate health assistant. I can help you analyze your blood sugar trends, suggest meal plans, or review your medical reports. How can I help you today?",
-      timestamp: new Date(),
-    },
-  ]);
-  const [inputValue, setInputValue] = useState("");
+      role: string;
+      content: string;
+    }[]
+  >([]);
+  const [sessionLoading, setSessionLoading] = useState(false);
+  const [sessionContentLoading, setSessionContentLoading] = useState(false);
+  const [sessionListError, setSessionListError] = useState<string | null>(null);
+  const [sessionContentError, setSessionContentError] = useState<string | null>(
+    null,
+  );
+  const [activeTab, setActiveTab] = useState("sessions");
+  const [message, setMessage] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [fileList, setFileList] = useState<string[]>([]);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isClearingSession, setIsClearingSession] = useState(false);
-  const [isPushing, setIsPushing] = useState(false);
-  const [sessionId, setSessionId] = useState<string>("");
-  const [isChatLoading, setIsChatLoading] = useState(false);
-  const [sessionHistory, setSessionHistory] = useState<ChatSession[]>([]);
-  const [modelStatus, setModelStatus] = useState<"checking" | "online" | "offline">("checking");
-  const [appInfo, setAppInfo] = useState<{ name: string, version: string } | null>(null);
+  const [files, setFiles] = useState<string[]>([]);
+  const [loadingFiles, setLoadingFiles] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [deletingFile, setDeletingFile] = useState<string | null>(null);
+  const [deletingSession, setDeletingSession] = useState<string | null>(null);
+  const [fileStatus, setFileStatus] = useState<string | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [apiStatus, setApiStatus] = useState<{
+    appName: string;
+    appVersion: string;
+    status: string;
+  } | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [showFilesOverlay, setShowFilesOverlay] = useState(false);
+  const [newSessionName, setNewSessionName] = useState("");
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    setSessionId(Date.now().toString());
-    handleFetchChatSessions(true);
-    checkModelStatus();
-  }, []);
-
-  const checkModelStatus = async () => {
-    try {
-      const rawBaseUrl = process.env.NEXT_PUBLIC_CHAT_API?.trim() || "http://localhost:8000/api/v1/";
-      const response = await fetch(rawBaseUrl);
-      if (!response.ok) throw new Error("Offline");
-      const data = await response.json();
-      if (data["Status"] === "Good") {
-        setModelStatus("online");
-        setAppInfo({ name: data["App Name"], version: data["App Version"] });
-      } else {
-        setModelStatus("offline");
-      }
-    } catch (e) {
-      setModelStatus("offline");
-    }
-  };
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  const apiBase = process.env.NEXT_PUBLIC_CHAT_API?.replace(/\/+$/, "") ?? "";
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (!apiBase) {
+      setApiError("Chat API URL not configured.");
+      return;
+    }
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-  };
-
-  const getChatApiBase = () => {
-    const rawBaseUrl =
-      process.env.NEXT_PUBLIC_CHAT_API?.trim() ||
-      "http://localhost:8000/api/v1/";
-    return rawBaseUrl.endsWith("/") ? rawBaseUrl : `${rawBaseUrl}/`;
-  };
-
-  const handleFetchFiles = async () => {
-    const apiUrl = `${getChatApiBase()}data/files`;
-
-    try {
-      const response = await fetch(apiUrl);
-      if (!response.ok) throw new Error("Failed to fetch file list");
-
-      const data = await response.json();
-      if (!data.files || !Array.isArray(data.files)) {
-        throw new Error("Unexpected response format");
+    fetch(apiBase)
+      .then((response) => response.json())
+      .then((data) => {
+        setApiStatus({
+          appName: data["App Name"] || data.appName || "Unknown",
+          appVersion: data["App Version"] || data.appVersion || "Unknown",
+          status: data.Status || data.status || "Unknown",
+        });
+      })
+      .catch((error: unknown) => {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        setApiError(errorMessage || "Failed to fetch chat API status.");
+      });
+  }, [apiBase]);
+  const fetchSessionMessages = useCallback(
+    async (sessionId: string) => {
+      if (!apiBase) {
+        setSessionContentError("Chat API URL not configured.");
+        return;
       }
 
-      setFileList(data.files);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now().toString(),
-          role: "bot",
-          content: `${data.Signal}\nFiles:\n${data.files.join("\n")}`,
-          timestamp: new Date(),
-        },
-      ]);
-    } catch (error) {
-      console.error("Error fetching files:", error);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now().toString(),
-          role: "bot",
-          content: "Unable to load file list. Please try again.",
-          timestamp: new Date(),
-        },
-      ]);
-    }
-  };
+      setSessionContentLoading(true);
+      setSessionContentError(null);
+      setSessionMessages([]);
 
-  const handleDeleteFile = async (fileId: string) => {
-    if (!fileId) return;
-    setIsDeleting(true);
+      try {
+        const response = await fetch(
+          `${apiBase}/chat/${encodeURIComponent(sessionId)}`,
+        );
+        if (!response.ok) {
+          throw new Error("Could not load session messages.");
+        }
+
+        const data = await response.json();
+        setSessionMessages(Array.isArray(data.messages) ? data.messages : []);
+      } catch (error: unknown) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        setSessionContentError(
+          errorMessage || "Failed to load session messages.",
+        );
+        setSessionMessages([]);
+      } finally {
+        setSessionContentLoading(false);
+      }
+    },
+    [apiBase],
+  );
+
+  const fetchSessions = useCallback(async () => {
+    if (!apiBase) {
+      setSessionListError("Chat API URL not configured.");
+      return;
+    }
+
+    setSessionLoading(true);
+    setSessionListError(null);
 
     try {
-      const apiUrl = `${getChatApiBase()}data/${encodeURIComponent(fileId)}`;
-      const response = await fetch(apiUrl, { method: "DELETE" });
-      if (!response.ok) throw new Error("Failed to delete file");
+      const response = await fetch(`${apiBase}/chat/sessions`);
+      if (!response.ok) {
+        throw new Error("Could not load sessions.");
+      }
 
       const data = await response.json();
-      setFileList((prev) => prev.filter((file) => file !== fileId));
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now().toString(),
-          role: "bot",
-          content: data.Signal || "File Deleted Successfully",
-          timestamp: new Date(),
-        },
-      ]);
-    } catch (error) {
-      console.error("Error deleting file:", error);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now().toString(),
-          role: "bot",
-          content: "Unable to delete the file. Please try again.",
-          timestamp: new Date(),
-        },
-      ]);
+      const sessionsList = Array.isArray(data.sessions) ? data.sessions : [];
+      setSessions(sessionsList);
+      if (sessionsList.length > 0) {
+        const firstSession = sessionsList[0];
+        setSelectedSession(firstSession);
+        await fetchSessionMessages(firstSession);
+      }
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      setSessionListError(errorMessage || "Failed to load sessions.");
+      setSessions([]);
     } finally {
-      setIsDeleting(false);
+      setSessionLoading(false);
+    }
+  }, [apiBase, fetchSessionMessages]);
+
+  useEffect(() => {
+    if (!apiBase) return;
+    fetchSessions();
+  }, [apiBase, fetchSessions]);
+
+  const fetchFiles = async () => {
+    if (!apiBase) {
+      setFileError("Chat API URL not configured.");
+      return;
+    }
+
+    setLoadingFiles(true);
+    setFileError(null);
+    setFileStatus(null);
+
+    try {
+      const response = await fetch(`${apiBase}/data/files`);
+      if (!response.ok) {
+        throw new Error("Could not load file list.");
+      }
+
+      const data = await response.json();
+      setFiles(Array.isArray(data.files) ? data.files : []);
+      if (data.Signal) {
+        setFileStatus(data.Signal);
+      }
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      setFileError(errorMessage || "Failed to load files.");
+      setFiles([]);
+    } finally {
+      setLoadingFiles(false);
     }
   };
 
-  const handlePushFile = async (fileId: string) => {
-    if (!fileId) return;
-    setIsPushing(true);
+  const deleteSession = async (sessionId: string) => {
+    if (!sessionId) return;
+    if (!apiBase) {
+      setSessionListError("Chat API URL not configured.");
+      return;
+    }
+
+    // No browser confirm: delete immediately (optimistic UI update below)
+
+    setDeletingSession(sessionId);
+    setSessionListError(null);
+
+    // Optimistically remove only the targeted session from local state
+    const previousSessions = sessions;
+    const updatedSessions = previousSessions.filter((s) => s !== sessionId);
+    setSessions(updatedSessions);
 
     try {
-      const apiUrl = `${getChatApiBase()}process/push`;
-      const response = await fetch(apiUrl, {
+      const response = await fetch(
+        `${apiBase}/chat/${encodeURIComponent(sessionId)}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(
+          data.Signal || data.message || "Failed to delete session.",
+        );
+      }
+
+      // If the deleted session was selected, select the next available session or clear
+      if (selectedSession === sessionId) {
+        const next = updatedSessions.length > 0 ? updatedSessions[0] : "";
+        setSelectedSession(next);
+        setSessionMessages([]);
+        if (next) await fetchSessionMessages(next);
+      }
+    } catch (error: unknown) {
+      // restore on error
+      setSessions(previousSessions);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      setSessionListError(errorMessage || "Failed to delete session.");
+    } finally {
+      setDeletingSession(null);
+    }
+  };
+
+  const handleFileSelected = async (event: ChangeEvent<HTMLInputElement>) => {
+    setFileError(null);
+    setFileStatus(null);
+    const file = event.target.files?.[0] ?? null;
+
+    if (file && file.type !== "application/pdf") {
+      setFileError("Please select a PDF file.");
+      setSelectedFile(null);
+      return;
+    }
+
+    if (file) {
+      setSelectedFile(file);
+      await uploadFile(file);
+    }
+  };
+
+  const uploadFile = async (file: File) => {
+    if (!apiBase) {
+      setFileError("Chat API URL not configured.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    setUploading(true);
+    setFileError(null);
+    setFileStatus(null);
+
+    try {
+      const response = await fetch(`${apiBase}/data/upload`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          file_id: fileId,
-          chunk_size: 400,
-          overlap_size: 20,
-        }),
+        body: formData,
       });
 
-      if (!response.ok) throw new Error("Failed to push file");
-
       const data = await response.json();
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now().toString(),
-          role: "bot",
-          content: data.Signal || "Embeddings Pushed Successfully",
-          timestamp: new Date(),
-        },
-      ]);
-    } catch (error) {
-      console.error("Error pushing file:", error);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now().toString(),
-          role: "bot",
-          content: "Unable to push embeddings for this file. Please try again.",
-          timestamp: new Date(),
-        },
-      ]);
-    } finally {
-      setIsPushing(false);
-    }
-  };
+      if (!response.ok) {
+        throw new Error(data.Signal || data.message || "Upload failed.");
+      }
 
-  const handlePushAllFiles = async () => {
-    setIsPushing(true);
+      setFileStatus(
+        data.Signal || "File uploaded successfully. Processing... ",
+      );
+      setSelectedFile(null);
 
-    try {
-      const apiUrl = `${getChatApiBase()}process/push_all`;
-      const response = await fetch(apiUrl, {
+      await fetch(`${apiBase}/process/push_all`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -235,748 +275,529 @@ export default function ChatPage() {
         }),
       });
 
-      if (!response.ok) throw new Error("Failed to push all files");
-
-      const data = await response.json();
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now().toString(),
-          role: "bot",
-          content: data.Signal || "Embeddings Pushed Successfully",
-          timestamp: new Date(),
-        },
-      ]);
-    } catch (error) {
-      console.error("Error pushing all files:", error);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now().toString(),
-          role: "bot",
-          content:
-            "Unable to process embeddings for all files. Please try again.",
-          timestamp: new Date(),
-        },
-      ]);
+      setFileStatus("File uploaded and processing started.");
+      if (showFilesOverlay) {
+        await fetchFiles();
+      }
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      setFileError(errorMessage || "Failed to upload file.");
     } finally {
-      setIsPushing(false);
+      setUploading(false);
     }
   };
 
-  const handleReindex = async () => {
-    setIsPushing(true);
-
-    try {
-      const apiUrl = `${getChatApiBase()}process/reindex`;
-      const response = await fetch(apiUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chunk_size: 400,
-          overlap_size: 20,
-        }),
-      });
-
-      if (!response.ok) throw new Error("Failed to reindex");
-
-      const data = await response.json();
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now().toString(),
-          role: "bot",
-          content: data.Signal || "Reindex Completed Successfully",
-          timestamp: new Date(),
-        },
-      ]);
-    } catch (error) {
-      console.error("Error reindexing:", error);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now().toString(),
-          role: "bot",
-          content: "Unable to complete reindexing. Please try again.",
-          timestamp: new Date(),
-        },
-      ]);
-    } finally {
-      setIsPushing(false);
+  const handleDelete = async (fileName: string) => {
+    if (!apiBase) {
+      setFileError("Chat API URL not configured.");
+      return;
     }
-  };
 
-  const handleSendChatMessage = async (question: string) => {
-    if (!question.trim() || !sessionId) return;
-
-    setIsChatLoading(true);
+    setDeletingFile(fileName);
+    setFileError(null);
+    setFileStatus(null);
 
     try {
-      const apiUrl = `${getChatApiBase()}chat/${encodeURIComponent(sessionId)}`;
-      const response = await fetch(apiUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          session_id: sessionId,
-          question: question,
-        }),
-      });
-
-      if (!response.ok) throw new Error("Failed to get chat response");
-
-      const data = await response.json();
-      const sourceText =
-        data.source_chunks && data.source_chunks.length > 0
-          ? `\n\nSources:\n${data.source_chunks.map((chunk: { file_id: string; score: number }) => `- ${chunk.file_id} (confidence: ${chunk.score})`).join("\n")}`
-          : "";
-
-      setMessages((prev) => [
-        ...prev,
+      const response = await fetch(
+        `${apiBase}/data/${encodeURIComponent(fileName)}`,
         {
-          id: Date.now().toString(),
-          role: "bot",
-          content: `${data.answer || data.Signal}${sourceText}`,
-          timestamp: new Date(),
-        },
-      ]);
-    } catch (error) {
-      console.error("Error sending chat message:", error);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now().toString(),
-          role: "bot",
-          content:
-            "Sorry, I encountered an error processing your question. Please try again.",
-          timestamp: new Date(),
-        },
-      ]);
-    } finally {
-      setIsChatLoading(false);
-    }
-  };
-
-  const handleFetchChatSessions = async (silent: boolean | React.MouseEvent = false) => {
-    const apiUrl = `${getChatApiBase()}chat/sessions`;
-
-    try {
-      const response = await fetch(apiUrl);
-      if (!response.ok) throw new Error("Failed to fetch chat sessions");
-
-      const data = await response.json();
-      const sessions = Array.isArray(data.sessions) ? data.sessions : [];
-      type SessionPayload =
-        | string
-        | {
-          session_id?: string;
-          id?: string;
-          title?: string;
-          date?: string;
-        };
-      const sessionItems = (sessions as SessionPayload[]).map(
-        (session, index) => {
-          if (typeof session === "string") {
-            return {
-              id: session,
-              title: session,
-              date: "Saved",
-            };
-          }
-
-          return {
-            id: session.session_id || session.id || `session-${index}`,
-            title:
-              session.title ||
-              session.session_id ||
-              session.id ||
-              `Session ${index + 1}`,
-            date: session.date || "Saved",
-          };
+          method: "DELETE",
         },
       );
 
-      setSessionHistory(sessionItems);
-      if (!sessionId && sessionItems.length > 0) {
-        setSessionId(sessionItems[0].id);
-      }
-
-      if (silent !== true) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: Date.now().toString(),
-            role: "bot",
-            content: `${data.Signal || "Chat sessions loaded successfully."}\nSessions:\n${sessionItems
-              .map((session) => `- ${session.title}`)
-              .join("\n")}`,
-            timestamp: new Date(),
-          },
-        ]);
-      }
-    } catch (error) {
-      console.error("Error fetching chat sessions:", error);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now().toString(),
-          role: "bot",
-          content: "Unable to load chat sessions. Please try again.",
-          timestamp: new Date(),
-        },
-      ]);
-    }
-  };
-
-  const handleNewChat = () => {
-    setSessionId(Date.now().toString());
-    setMessages([{
-      id: Date.now().toString(),
-      role: "bot",
-      content: "Hello! I'm your DiaMate health assistant. I can help you analyze your blood sugar trends, suggest meal plans, or review your medical reports. How can I help you today?",
-      timestamp: new Date(),
-    }]);
-    if (window.innerWidth < 1024) {
-      setIsHistoryOpen(false);
-    }
-  };
-
-  const handleDeleteSession = async (e: React.MouseEvent, idToDelete: string) => {
-    e.stopPropagation();
-    setIsClearingSession(true);
-
-    try {
-      const apiUrl = `${getChatApiBase()}chat/${encodeURIComponent(idToDelete)}`;
-      const response = await fetch(apiUrl, { method: "DELETE" });
-      if (!response.ok) throw new Error("Failed to delete session");
-
-      await response.json();
-      setSessionHistory((prev) =>
-        prev.filter((session) => session.id !== idToDelete),
-      );
-
-      if (sessionId === idToDelete) {
-        handleNewChat();
-      }
-    } catch (error) {
-      console.error("Error deleting session:", error);
-    } finally {
-      setIsClearingSession(false);
-    }
-  };
-
-  const handleFetchSessionHistory = async (selectedSessionId: string) => {
-    if (!selectedSessionId) return;
-    setSessionId(selectedSessionId);
-
-    try {
-      const apiUrl = `${getChatApiBase()}chat/${encodeURIComponent(selectedSessionId)}`;
-      const response = await fetch(apiUrl);
-      if (!response.ok) throw new Error("Failed to fetch session history");
-
       const data = await response.json();
-      type SessionMessage = {
-        role?: string;
-        content?: string;
-      };
-      const loadedMessages: Message[] = Array.isArray(data.messages)
-        ? (data.messages as SessionMessage[]).map((message, index) => ({
-          id: `${selectedSessionId}-${index}`,
-          role: message.role === "assistant" ? "bot" : "user",
-          content: message.content || "",
-          timestamp: new Date(),
-        }))
-        : [];
+      if (!response.ok) {
+        throw new Error(
+          data.Signal || data.message || "Failed to delete file.",
+        );
+      }
 
-      setMessages(
-        loadedMessages.length
-          ? loadedMessages
-          : [
-            {
-              id: `${selectedSessionId}-info`,
-              role: "bot",
-              content:
-                "No message history was returned for this session. You can start a new conversation.",
-              timestamp: new Date(),
-            },
-          ],
-      );
+      setFileStatus(data.Signal || "File deleted successfully.");
+      await fetchFiles();
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      setFileError(errorMessage || "Failed to delete file.");
+    } finally {
+      setDeletingFile(null);
+    }
+  };
 
-      setMessages((prev) => [
+  const handleSendMessage = () => {
+    (async () => {
+      if (!message.trim()) {
+        setFileStatus("Please type a message or attach a PDF to send.");
+        return;
+      }
+
+      if (!apiBase) {
+        setFileStatus("Chat API URL not configured.");
+        return;
+      }
+
+      if (!selectedSession) {
+        setFileStatus("Please select a session before sending a message.");
+        return;
+      }
+
+      // Optimistically add user's message
+      setSessionMessages((prev) => [
         ...prev,
-        {
-          id: `${selectedSessionId}-loaded`,
-          role: "bot",
-          content: `Session ${data.session_id || selectedSessionId} loaded successfully.`,
-          timestamp: new Date(),
-        },
+        { role: "user", content: message },
       ]);
-    } catch (error) {
-      console.error("Error fetching session history:", error);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `${selectedSessionId}-error`,
-          role: "bot",
-          content: "Unable to load session history. Please try again.",
-          timestamp: new Date(),
-        },
-      ]);
-    }
-  };
+      setFileStatus("Sending message...");
 
-  const handleFetchProcessStatus = async () => {
-    const apiUrl = `${getChatApiBase()}process/status`;
-
-    try {
-      const response = await fetch(apiUrl);
-      if (!response.ok) throw new Error("Failed to fetch process status");
-
-      await response.json();
-    } catch (error) {
-      console.error("Error fetching process status:", error);
-    }
-  };
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && file.type === "application/pdf") {
-      setSelectedFile(file);
-    } else if (file) {
-      alert("Please upload a PDF file.");
-    }
-  };
-
-  const handleSendMessage = async () => {
-    if (!inputValue.trim() && !selectedFile) return;
-
-    const currentFile = selectedFile;
-    const currentInput = inputValue;
-
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content: currentInput || (currentFile ? "Uploaded a PDF file." : ""),
-      timestamp: new Date(),
-      attachment: currentFile
-        ? { name: currentFile.name, size: formatFileSize(currentFile.size) }
-        : undefined,
-    };
-
-    setMessages((prev) => [...prev, newMessage]);
-    setInputValue("");
-    setSelectedFile(null);
-
-    if (currentFile) {
-      setIsUploading(true);
       try {
-        const formData = new FormData();
-        formData.append("file", currentFile);
-
-        const baseUrl = getChatApiBase();
-        const response = await fetch(`${baseUrl}data/upload`, {
+        const response = await fetch(`${apiBase}/chat/`, {
           method: "POST",
-          body: formData,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            session_id: selectedSession,
+            question: message,
+          }),
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: (Date.now() + 1).toString(),
-              role: "bot",
-              content: `File uploaded successfully. File ID: ${data.File_ID}`,
-              timestamp: new Date(),
-            },
-          ]);
-        } else {
-          throw new Error("Upload failed");
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(
+            data.Signal || data.message || "Failed to send chat message.",
+          );
         }
-      } catch (error) {
-        console.error("Error uploading file:", error);
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: (Date.now() + 1).toString(),
-            role: "bot",
-            content: "Sorry, I encountered an error while uploading your file.",
-            timestamp: new Date(),
-          },
-        ]);
+
+        const answer = data.answer ?? data.Signal ?? "";
+        if (answer) {
+          setSessionMessages((prev) => [
+            ...prev,
+            { role: "assistant", content: answer },
+          ]);
+        }
+
+        if (data.Signal) setFileStatus(data.Signal);
+        else setFileStatus("Message sent and response received.");
+      } catch (error: unknown) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        setFileStatus(errorMessage || "Failed to send message.");
       } finally {
-        setIsUploading(false);
+        setMessage("");
       }
-    } else {
-      // Send text message via chat API
-      await handleSendChatMessage(currentInput);
-    }
+    })();
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
+  const openFileOverlay = async () => {
+    setShowFilesOverlay(true);
+    setActiveTab("files");
+    await fetchFiles();
   };
 
-  const removeFile = () => {
-    setSelectedFile(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+  const openFilePicker = () => {
+    if (uploading) return;
+    fileInputRef.current?.click();
+  };
+
+  const createNewSession = (name?: string) => {
+    const trimmed = name?.trim();
+    const id =
+      trimmed && trimmed.length > 0
+        ? trimmed
+        : `${Math.floor(Math.random() * 900000) + 100000}`; // random 6-digit number as name
+    setSessions((prev) => [id, ...prev]);
+    setSelectedSession(id);
+    setSessionMessages([]);
+    setActiveTab("sessions");
+    setShowFilesOverlay(false);
+    setNewSessionName("");
   };
 
   return (
-    <div className="flex min-h-screen h-full w-full overflow-hidden bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-950 dark:to-[#0a0f1c] text-slate-900 dark:text-slate-100 font-sans selection:bg-blue-500/30">
-      {/* Mobile History Overlay */}
-      {isHistoryOpen && (
-        <div
-          className="lg:hidden fixed inset-0 bg-slate-900/40 dark:bg-black/60 z-40 backdrop-blur-md transition-all duration-300"
-          onClick={() => setIsHistoryOpen(false)}
-        />
-      )}
+    <div className="relative w-full h-screen p-3 sm:p-4 md:p-8 flex flex-col gap-5 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full dark:[&::-webkit-scrollbar-thumb]:bg-slate-600">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
+          Chat
+        </h1>
+      </div>
 
-      {/* Chat History Sidebar */}
-      <div
-        className={`fixed lg:relative z-50 h-full w-[280px] sm:w-[320px] flex flex-col border-r border-white/20 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/40 backdrop-blur-xl transition-transform duration-500 ease-out ${isHistoryOpen ? "translate-x-0 shadow-2xl shadow-blue-900/20" : "-translate-x-full lg:translate-x-0"
-          }`}
-      >
-        <div className="p-5 border-b border-slate-200/50 dark:border-slate-800/50 flex items-center justify-between">
-          <button
-            onClick={handleNewChat}
-            className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-4 py-3 rounded-2xl transition-all duration-300 font-semibold shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transform hover:-translate-y-0.5 active:translate-y-0"
-          >
-            <Plus size={20} />
-            New Conversation
-          </button>
-          <button
-            className="lg:hidden p-2 ml-3 text-slate-500 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-xl transition-colors"
-            onClick={() => setIsHistoryOpen(false)}
-          >
-            <X size={20} />
-          </button>
-        </div>
+      <div className="flex flex-col-reverse xl:flex-row gap-5 flex-1 min-h-0">
+        <aside className="group relative flex flex-col w-full xl:w-[320px] shrink-0 overflow-hidden rounded-2xl border shadow-sm transition duration-300 border-slate-200/80 bg-white/90 dark:border-slate-700/80 dark:bg-slate-900/70 backdrop-blur-sm">
+          <div className="border-b border-slate-200/80 bg-white/90 dark:border-slate-700/80 dark:bg-slate-950/50 p-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400">
+                Sessions
+              </p>
+              <h2 className="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">
+                Recent conversations
+              </h2>
+            </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700">
-          <div>
-            <h3 className="text-[11px] font-bold text-slate-400 dark:text-slate-500 mb-3 px-2 uppercase tracking-widest">
-              Recent Sessions
-            </h3>
-            <div className="space-y-1.5">
-              {sessionHistory.map((chat) => (
-                <div key={chat.id} className="relative group/item flex items-center">
-                  <button
-                    onClick={() => handleFetchSessionHistory(chat.id)}
-                    className={`w-full flex items-start gap-3 px-3 py-3 pr-10 rounded-2xl text-left transition-all duration-300 group ${chat.id === sessionId
-                      ? "bg-white dark:bg-slate-800/80 shadow-md shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-700"
-                      : "hover:bg-white/50 dark:hover:bg-slate-800/40 border border-transparent"
-                      }`}
+            <div className="mt-3">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  createNewSession(newSessionName);
+                }}
+                className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2"
+              >
+                <input
+                  value={newSessionName}
+                  onChange={(e) => setNewSessionName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      createNewSession(newSessionName);
+                    }
+                  }}
+                  placeholder="New chat name (opt)"
+                  aria-label="New chat name"
+                  className="flex-1 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 max-w-full"
+                />
+                <button
+                  type="submit"
+                  aria-label="Create new chat"
+                  title="New chat"
+                  className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-blue-600 text-white shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden
                   >
-                    <div className={`mt-0.5 p-1.5 rounded-lg transition-colors ${chat.id === sessionId ? "bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/30 group-hover:text-blue-500"}`}>
-                      <MessageSquare size={16} className="flex-shrink-0" />
-                    </div>
-                    <div className="flex-1 overflow-hidden">
-                      <p className={`text-sm font-semibold truncate transition-colors ${chat.id === sessionId ? "text-slate-900 dark:text-white" : "text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white"}`}>
-                        {chat.title}
-                      </p>
-                      <p className="text-[11px] font-medium text-slate-400 dark:text-slate-500 mt-1">
-                        {chat.date}
-                      </p>
-                    </div>
-                  </button>
-                  <button
-                    onClick={(e) => handleDeleteSession(e, chat.id)}
-                    disabled={isClearingSession}
-                    className="absolute right-2 p-1.5 text-slate-400 opacity-0 group-hover/item:opacity-100 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-all"
-                    title="Delete session"
-                  >
-                    <Trash2 size={16} className={isClearingSession ? "animate-pulse" : ""} />
-                  </button>
-                </div>
-              ))}
+                    <path
+                      fillRule="evenodd"
+                      d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
+              </form>
             </div>
           </div>
+
+          <div className="p-5 flex-1 min-h-0 overflow-y-auto space-y-4">
+            <nav className="space-y-3">
+              {sessionLoading ? (
+                <div className="rounded-2xl border border-slate-200/90 bg-slate-50 p-4 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300">
+                  Loading sessions...
+                </div>
+              ) : sessionListError ? (
+                <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700 dark:border-rose-900/40 dark:bg-rose-950 dark:text-rose-300">
+                  {sessionListError}
+                </div>
+              ) : sessions.length === 0 ? (
+                <div className="rounded-2xl border border-slate-200/90 bg-slate-50 p-4 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300">
+                  No sessions available.
+                </div>
+              ) : (
+                sessions.map((session) => {
+                  const active = session === selectedSession;
+                  return (
+                    <div key={session} className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedSession(session);
+                          setActiveTab("sessions");
+                          setShowFilesOverlay(false);
+                          fetchSessionMessages(session);
+                        }}
+                        className={`flex-1 flex items-center gap-3 text-left rounded-2xl px-4 py-3 text-sm font-medium transition ${
+                          active
+                            ? "border border-blue-300 bg-blue-50 text-slate-900 shadow-sm dark:border-blue-700 dark:bg-blue-900/80 dark:text-white"
+                            : "border border-slate-200 bg-slate-50 text-slate-800 hover:border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:hover:border-slate-600 dark:hover:bg-slate-900"
+                        }`}
+                      >
+                        <div className="flex-1 truncate">
+                          <span className="font-medium">{session}</span>
+                        </div>
+                        <div className="text-xs text-slate-400 ml-2 truncate">
+                          &nbsp;
+                        </div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteSession(session);
+                        }}
+                        disabled={deletingSession === session}
+                        title="Delete session"
+                        aria-label={`Delete session ${session}`}
+                        className="ml-2 shrink-0 inline-flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-rose-50 text-rose-700 hover:bg-rose-100 disabled:opacity-60 dark:bg-rose-950 dark:text-rose-300"
+                      >
+                        {deletingSession === session ? (
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path d="M6 7h8v9H6z" />
+                          </svg>
+                        ) : (
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                            aria-hidden
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M6 2a1 1 0 00-1 1v1H3a1 1 0 100 2h14a1 1 0 100-2h-2V3a1 1 0 00-1-1H6zm2 5a1 1 0 012 0v7a1 1 0 11-2 0V7zm4 0a1 1 0 012 0v7a1 1 0 11-2 0V7z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
+                  );
+                })
+              )}
+            </nav>
+          </div>
+        </aside>
+
+        <div className="flex-1 flex flex-col gap-5 min-h-0">
+          {/* Server status merged into Workspace controls below */}
+
+          <div className="group relative w-full flex-none overflow-hidden rounded-2xl border shadow-sm transition duration-300 border-slate-200/80 bg-white/90 dark:border-slate-700/80 dark:bg-slate-900/70 backdrop-blur-sm">
+            <div className="p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                    Workspace controls
+                  </h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                    Open files or work with sessions from the same interface.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-3 items-center">
+                  <button
+                    type="button"
+                    onClick={openFileOverlay}
+                    className={`rounded-2xl border px-4 py-3 text-sm font-semibold transition ${activeTab === "files" ? "border-blue-300 bg-blue-50 text-slate-900 shadow-sm dark:border-blue-700 dark:bg-blue-900/80 dark:text-white" : "border-slate-200 bg-slate-50 text-slate-800 hover:border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:hover:border-slate-600 dark:hover:bg-slate-900"}`}
+                  >
+                    Files
+                  </button>
+                  {/* Server status inline */}
+                  <div className="ml-2 inline-flex items-center gap-3">
+                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                      {apiStatus?.appName || "Chat API"}
+                    </span>
+                    <span
+                      className={`inline-flex items-center rounded-full px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.25em] ${apiStatus?.status === "Good" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300" : "bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300"}`}
+                    >
+                      {apiStatus?.status || (apiError ? "Error" : "Loading...")}
+                    </span>
+                    <span className="rounded-2xl border border-slate-200/90 bg-slate-50 px-3 py-1 text-xs dark:border-slate-700 dark:bg-slate-900">
+                      Ver: {apiStatus?.appVersion || "—"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="group relative w-full flex-1 flex flex-col min-h-0 overflow-hidden rounded-2xl border shadow-sm transition duration-300 border-slate-200/80 bg-white/90 dark:border-slate-700/80 dark:bg-slate-900/70 backdrop-blur-sm">
+            <div className="p-6 flex-1 flex flex-col min-h-0">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                    Conversation
+                  </h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                    Messages for the selected chat session.
+                  </p>
+                </div>
+                <span className="text-sm text-slate-500 dark:text-slate-400">
+                  {selectedSession || "No session selected"}
+                </span>
+              </div>
+
+              {sessionContentLoading ? (
+                <div className="mt-5 rounded-2xl border border-slate-200/80 bg-slate-50 p-6 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300">
+                  Loading messages...
+                </div>
+              ) : sessionContentError ? (
+                <div className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-700 dark:border-rose-900/40 dark:bg-rose-950 dark:text-rose-300">
+                  {sessionContentError}
+                </div>
+              ) : (
+                <div className="mt-5 flex-1 min-h-0 overflow-y-auto space-y-3 rounded-2xl border border-slate-200/80 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-950">
+                  {sessionMessages.length > 0 ? (
+                    sessionMessages.map((messageItem, index) => (
+                      <div
+                        key={`${messageItem.role}-${index}`}
+                        className={`rounded-2xl p-4 text-sm ${
+                          messageItem.role === "assistant"
+                            ? "bg-slate-100 text-slate-900 dark:bg-slate-900 dark:text-slate-100"
+                            : "bg-white text-slate-800 dark:bg-slate-800 dark:text-slate-200"
+                        }`}
+                      >
+                        <p className="font-semibold uppercase tracking-[0.2em] text-xs text-slate-500 dark:text-slate-400">
+                          {messageItem.role}
+                        </p>
+                        <p className="mt-2 whitespace-pre-line leading-6">
+                          {messageItem.content}
+                        </p>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300">
+                      No messages loaded yet. Select a session to view its chat.
+                    </div>
+                  )}
+                </div>
+              )}
+              {/* Message input (merged from Send message panel) */}
+              <div className="mt-5">
+                <div className="flex items-start gap-3">
+                  <button
+                    type="button"
+                    onClick={openFilePicker}
+                    disabled={uploading}
+                    className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                  >
+                    {uploading ? "Uploading…" : "Attach"}
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="application/pdf"
+                    className="hidden"
+                    onChange={handleFileSelected}
+                  />
+
+                  <textarea
+                    value={message}
+                    onChange={(event) => setMessage(event.target.value)}
+                    placeholder="Write a message..."
+                    className="flex-1 h-10 rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-blue-500 dark:focus:ring-blue-500/20 resize-none"
+                  />
+
+                  <div className="shrink-0">
+                    <button
+                      type="button"
+                      onClick={handleSendMessage}
+                      className="h-10 inline-flex items-center justify-center rounded-2xl bg-blue-600 px-4 text-sm font-semibold text-white shadow transition hover:bg-blue-700"
+                    >
+                      Send
+                    </button>
+                  </div>
+                </div>
+
+                {selectedFile ? (
+                  <div className="mt-3 flex items-center gap-3">
+                    <div className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-700 dark:bg-slate-800 dark:text-slate-200 truncate">
+                      {selectedFile.name}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedFile(null)}
+                      className="text-sm font-semibold text-rose-700"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+              {selectedFile ? (
+                <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">
+                  Selected file: {selectedFile.name} (uploading automatically)
+                </p>
+              ) : null}
+              {fileError ? (
+                <p className="mt-3 text-xs text-rose-500">{fileError}</p>
+              ) : null}
+              {fileStatus ? (
+                <p className="mt-3 text-xs text-emerald-600 dark:text-emerald-300">
+                  {fileStatus}
+                </p>
+              ) : null}
+            </div>
+          </div>
+
+          {/* Send message panel merged into Conversation above */}
         </div>
       </div>
 
-      {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col h-full relative min-w-0 bg-transparent">
-        {/* Chat Header */}
-        <div className="h-[72px] flex items-center justify-between px-4 sm:px-8 border-b border-slate-200/50 dark:border-slate-800/50 bg-white/60 dark:bg-slate-900/40 backdrop-blur-xl sticky top-0 z-20">
-          <div className="flex items-center gap-4">
-            <button
-              className="lg:hidden p-2.5 -ml-2 text-slate-600 dark:text-slate-300 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-xl transition-colors"
-              onClick={() => setIsHistoryOpen(true)}
-            >
-              <Menu size={22} />
-            </button>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
-                <Bot className="w-5 h-5 text-white" />
-              </div>
+      {showFilesOverlay ? (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-950/30 p-4">
+          <div className="w-full max-w-3xl max-h-[85vh] overflow-hidden rounded-2xl border border-slate-200/80 bg-white/95 shadow-2xl dark:border-slate-700/90 dark:bg-slate-950/95">
+            <div className="flex flex-col gap-3 border-b border-slate-200/90 p-5 dark:border-slate-700/90 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight leading-tight">
-                  DiaMate AI
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                  Files
                 </h2>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className={`w-2 h-2 rounded-full ${modelStatus === 'online' ? 'bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]' : modelStatus === 'offline' ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)]' : 'bg-amber-500 animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.8)]'}`} />
-                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                    {modelStatus === 'online' && appInfo ? (
-                      <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{appInfo.name} v{appInfo.version}</span>
-                    ) : modelStatus === 'offline' ? (
-                      <span className="text-rose-600 dark:text-rose-400 font-semibold">Model Offline</span>
-                    ) : (
-                      <span className="text-amber-600 dark:text-amber-400 font-semibold">Checking Status...</span>
-                    )}
-                    <span className="mx-1.5 text-slate-300 dark:text-slate-700">•</span>
-                    Session: <span className="text-slate-700 dark:text-slate-300">{sessionId || "New"}</span>
-                  </p>
-                </div>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                  Delete any uploaded PDF or refresh the list.
+                </p>
               </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 lg:gap-3">
-            <div className="hidden md:flex bg-slate-100/50 dark:bg-slate-800/30 p-1 rounded-2xl backdrop-blur-md">
-              <button
-                onClick={handleFetchFiles}
-                className="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700/80 rounded-xl transition-all hover:shadow-sm"
-                title="Fetch file list"
-              >
-                <Paperclip size={16} />
-                <span className="hidden xl:inline">Files</span>
-              </button>
-              <button
-                onClick={handleFetchChatSessions}
-                className="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700/80 rounded-xl transition-all hover:shadow-sm"
-                title="Fetch chat sessions"
-              >
-                <MessageSquare size={16} />
-                <span className="hidden xl:inline">Sessions</span>
-              </button>
-              <button
-                onClick={handlePushAllFiles}
-                disabled={isPushing}
-                className="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-bold text-emerald-700 bg-emerald-100/80 hover:bg-emerald-200 dark:text-emerald-300 dark:bg-emerald-900/30 dark:hover:bg-emerald-800/40 rounded-xl transition-colors disabled:opacity-50"
-              >
-                Push All
-              </button>
-              <button
-                onClick={handleReindex}
-                disabled={isPushing}
-                className="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-bold text-violet-700 bg-violet-100/80 hover:bg-violet-200 dark:text-violet-300 dark:bg-violet-900/30 dark:hover:bg-violet-800/40 rounded-xl transition-colors disabled:opacity-50"
-              >
-                Reindex
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-8 scroll-smooth scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700">
-          {messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`flex gap-4 sm:gap-5 max-w-4xl mx-auto group ${msg.role === "user" ? "flex-row-reverse" : "flex-row"
-                }`}
-            >
-              <div
-                className={`w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm transition-transform group-hover:scale-105 ${msg.role === "user"
-                  ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900"
-                  : "bg-gradient-to-tr from-blue-600 to-indigo-500 text-white shadow-blue-500/30"
-                  }`}
-              >
-                {msg.role === "user" ? <User size={20} /> : <Bot size={20} />}
-              </div>
-
-              <div
-                className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"
-                  } max-w-[85%] sm:max-w-[75%]`}
-              >
-                <div
-                  className={`px-6 py-4 rounded-[24px] shadow-sm transition-all duration-300 ${msg.role === "user"
-                    ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded-tr-sm"
-                    : "bg-white/90 dark:bg-slate-800/90 backdrop-blur-md text-slate-800 dark:text-slate-100 border border-slate-200/50 dark:border-slate-700/50 rounded-tl-sm shadow-slate-200/20 dark:shadow-none hover:shadow-md"
-                    }`}
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={fetchFiles}
+                  className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
                 >
-                  {msg.attachment && (
-                    <div
-                      className={`flex items-center gap-3 p-3 rounded-2xl mb-3 ${msg.role === "user"
-                        ? "bg-white/10 border border-white/20"
-                        : "bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700"
-                        }`}
-                    >
-                      <div className="w-12 h-12 rounded-xl bg-red-500/10 dark:bg-red-500/20 flex items-center justify-center flex-shrink-0">
-                        <FileText className="w-6 h-6 text-red-500 dark:text-red-400" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold truncate">
-                          {msg.attachment.name}
-                        </p>
-                        <p
-                          className={`text-xs mt-0.5 font-medium ${msg.role === "user"
-                            ? "text-slate-300 dark:text-slate-600"
-                            : "text-slate-500 dark:text-slate-400"
-                            }`}
-                        >
-                          PDF Document • {msg.attachment.size}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                  {msg.content && (
-                    <p className={`text-[15px] leading-relaxed whitespace-pre-wrap ${msg.role === "user" ? "font-medium" : ""}`}>
-                      {msg.content}
-                    </p>
-                  )}
-                </div>
-                <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 mt-2 px-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {msg.timestamp.toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </span>
+                  Refresh
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowFilesOverlay(false)}
+                  className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                >
+                  Close
+                </button>
               </div>
             </div>
-          ))}
-          {isChatLoading && (
-            <div className="flex gap-5 max-w-4xl mx-auto flex-row">
-              <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm bg-gradient-to-tr from-blue-600 to-indigo-500 text-white shadow-blue-500/30 animate-pulse">
-                <Bot size={20} />
-              </div>
-              <div className="flex flex-col items-start max-w-[75%]">
-                <div className="px-6 py-5 rounded-[24px] bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 rounded-tl-sm flex items-center gap-2">
-                  <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                </div>
-              </div>
-            </div>
-          )}
-          <div ref={messagesEndRef} className="h-4" />
-        </div>
 
-        {/* Input Area */}
-        <div className="p-4 sm:p-6 bg-gradient-to-t from-slate-50 via-slate-50/95 to-transparent dark:from-slate-950 dark:via-slate-950/95 pt-8 mt-auto z-10">
-          <div className="max-w-4xl mx-auto">
-            {fileList.length > 0 && (
-              <div className="mb-4 rounded-3xl border border-slate-200/60 dark:border-slate-700/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-4 shadow-xl shadow-slate-200/20 dark:shadow-none transition-all">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                    <Bot size={16} className="text-blue-500" /> Server Files Repository
-                  </span>
-                  <button
-                    onClick={handleFetchFiles}
-                    className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
-                  >
-                    Refresh List
-                  </button>
+            <div className="max-h-[70vh] overflow-y-auto p-5 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full dark:[&::-webkit-scrollbar-thumb]:bg-slate-600">
+              {loadingFiles ? (
+                <div className="rounded-3xl border border-slate-200/90 bg-slate-50 p-6 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-400">
+                  Loading files...
                 </div>
-                <div className="grid gap-2 max-h-40 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-700">
-                  {fileList.map((fileId) => (
+              ) : files.length === 0 ? (
+                <div className="rounded-3xl border border-slate-200/90 bg-slate-50 p-6 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-400">
+                  No files uploaded yet.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {files.map((fileName) => (
                     <div
-                      key={fileId}
-                      className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-950/50 px-4 py-2.5 group hover:border-blue-200 dark:hover:border-blue-800/50 transition-colors"
+                      key={fileName}
+                      className="flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-950 sm:flex-row sm:items-center sm:justify-between"
                     >
-                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">
-                        {fileId}
-                      </span>
-                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => handlePushFile(fileId)}
-                          disabled={isPushing}
-                          className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-100/80 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-800/50 transition-colors"
-                        >
-                          Push
-                        </button>
-                        <button
-                          onClick={() => handleDeleteFile(fileId)}
-                          disabled={isDeleting}
-                          className="px-3 py-1.5 rounded-lg text-xs font-bold bg-rose-100/80 text-rose-700 hover:bg-rose-200 dark:bg-rose-900/30 dark:text-rose-400 dark:hover:bg-rose-800/50 transition-colors"
-                        >
-                          Delete
-                        </button>
+                      <div className="truncate text-sm text-slate-700 dark:text-slate-200">
+                        {fileName}
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(fileName)}
+                        disabled={deletingFile === fileName}
+                        className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-900/40 dark:bg-rose-950 dark:text-rose-300"
+                      >
+                        {deletingFile === fileName ? "Deleting…" : "Delete"}
+                      </button>
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
-
-            <div className="relative flex flex-col bg-white dark:bg-slate-900 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none border border-slate-200/80 dark:border-slate-700/80 p-2 focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-500/10 transition-all duration-300">
-
-              {selectedFile && (
-                <div className="flex items-center gap-3 bg-blue-50/50 dark:bg-blue-900/20 m-2 p-3 rounded-2xl border border-blue-100/50 dark:border-blue-800/30 w-fit max-w-full">
-                  <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-900/40 flex items-center justify-center flex-shrink-0">
-                    <FileText className="w-5 h-5 text-red-600 dark:text-red-400" />
-                  </div>
-                  <div className="flex-1 min-w-0 pr-4">
-                    <p className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate">
-                      {selectedFile.name}
-                    </p>
-                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">
-                      {formatFileSize(selectedFile.size)}
-                    </p>
-                  </div>
-                  <button
-                    onClick={removeFile}
-                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-xl transition-all flex-shrink-0"
-                  >
-                    <X size={18} strokeWidth={2.5} />
-                  </button>
-                </div>
               )}
-
-              <div className="flex items-end gap-2 p-1">
-                <input
-                  type="file"
-                  accept=".pdf,application/pdf"
-                  ref={fileInputRef}
-                  className="hidden"
-                  onChange={handleFileSelect}
-                />
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center justify-center w-12 h-12 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-full transition-colors flex-shrink-0"
-                  title="Upload PDF"
-                >
-                  <Paperclip size={22} strokeWidth={2} />
-                </button>
-
-                <textarea
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder={selectedFile ? "Add a message about this file..." : `Ask DiaMate anything${sessionId ? ` in session "${sessionId}"` : ""}...`}
-                  className="flex-1 max-h-32 min-h-[48px] bg-transparent border-0 focus:ring-0 resize-none py-3 px-2 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-[16px] font-medium leading-relaxed"
-                  rows={1}
-                  style={{ height: "auto" }}
-                />
-
-                <button
-                  onClick={handleSendMessage}
-                  disabled={
-                    (!inputValue.trim() && !selectedFile) ||
-                    isUploading ||
-                    isChatLoading
-                  }
-                  className="w-12 h-12 bg-gradient-to-tr from-blue-600 to-indigo-500 hover:from-blue-500 hover:to-indigo-400 disabled:from-slate-200 disabled:to-slate-300 dark:disabled:from-slate-800 dark:disabled:to-slate-800 disabled:text-slate-400 text-white rounded-full transition-all duration-300 flex-shrink-0 flex items-center justify-center shadow-lg shadow-blue-500/30 disabled:shadow-none transform hover:scale-105 active:scale-95 disabled:scale-100"
-                >
-                  {isUploading || isChatLoading ? (
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  ) : (
-                    <Send size={20} strokeWidth={2.5} className="ml-1" />
-                  )}
-                </button>
-              </div>
-            </div>
-            <div className="flex justify-center mt-4">
-              <p className="text-[11px] font-medium text-slate-400 dark:text-slate-500 tracking-wide">
-                DiaMate AI can make mistakes. Please verify important health information.
-              </p>
+              {fileError ? (
+                <p className="mt-4 text-sm text-rose-500">{fileError}</p>
+              ) : null}
+              {fileStatus ? (
+                <p className="mt-4 text-sm text-emerald-600 dark:text-emerald-300">
+                  {fileStatus}
+                </p>
+              ) : null}
             </div>
           </div>
         </div>
-      </div>
+      ) : null}
     </div>
   );
-}
+};
+
+export default ChatPage;

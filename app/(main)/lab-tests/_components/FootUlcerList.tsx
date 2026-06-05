@@ -60,8 +60,8 @@ export default async function FootUlcerList({
                 </h3>
                 <p className="text-xs sm:text-sm font-medium text-violet-500">
                   {ulcer.ai_detectionResult
-                    ? "AI overlay available"
-                    : "No AI overlay available"}
+                    ? ulcer.ai_detectionResult
+                    : "AI analysis not available"}
                 </p>
               </div>
             </div>
