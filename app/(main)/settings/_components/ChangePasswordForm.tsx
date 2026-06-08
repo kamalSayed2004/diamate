@@ -12,7 +12,11 @@ import {
 interface ChangePasswordFormProps {
   token: string;
 }
-
+const patientIdStr =
+  cookieStore.get("patientId")?.value ||
+  cookieStore.get("DiamateTokenId")?.value ||
+  "0";
+const patientId = Number(patientIdStr);
 export default function ChangePasswordForm({ token }: ChangePasswordFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +68,7 @@ export default function ChangePasswordForm({ token }: ChangePasswordFormProps) {
     setLoading(true);
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_API}/Account/ChangePassword`,
+        `${process.env.NEXT_PUBLIC_BASE_API}/Account/ChangePassword/${patientId}`,
         {
           method: "PATCH",
           headers: {
