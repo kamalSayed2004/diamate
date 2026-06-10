@@ -1,5 +1,6 @@
 import React from "react";
 import { Utensils } from "lucide-react";
+import { BASE_API } from "@/app/config";
 
 interface Meal {
   id?: number;
@@ -24,7 +25,7 @@ export default async function MealList({ patientId, token }: MealListProps) {
   if (patientId > 0 && token) {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_API}/Meal/GetAllMealsForPatient/${patientId}`,
+        `${BASE_API}/Meal/GetAllMealsForPatient/${patientId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
           cache: "no-store",
@@ -79,7 +80,7 @@ export default async function MealList({ patientId, token }: MealListProps) {
                     kcal
                   </span>
                 </div>
-                
+
                 <div className="min-w-0 flex-1">
                   <h3 className="text-sm sm:text-base font-bold text-slate-800 dark:text-white truncate">
                     {meal.name}
@@ -99,16 +100,32 @@ export default async function MealList({ patientId, token }: MealListProps) {
               {/* Macros Row */}
               <div className="grid grid-cols-3 gap-2 border-t border-slate-100 dark:border-slate-800/50 pt-2.5">
                 {[
-                  { label: "Protein", val: meal.protein, unit: "g", color: "text-blue-500" },
-                  { label: "Carbs", val: meal.carbs, unit: "g", color: "text-emerald-500" },
-                  { label: "Fats", val: meal.fats, unit: "g", color: "text-amber-500" },
+                  {
+                    label: "Protein",
+                    val: meal.protein,
+                    unit: "g",
+                    color: "text-blue-500",
+                  },
+                  {
+                    label: "Carbs",
+                    val: meal.carbs,
+                    unit: "g",
+                    color: "text-emerald-500",
+                  },
+                  {
+                    label: "Fats",
+                    val: meal.fats,
+                    unit: "g",
+                    color: "text-amber-500",
+                  },
                 ].map((macro) => (
                   <div key={macro.label} className="flex flex-col text-center">
                     <span className="text-[9px] font-bold uppercase text-slate-400 tracking-tighter">
                       {macro.label}
                     </span>
                     <span className={`text-xs font-bold ${macro.color}`}>
-                      {macro.val}{macro.unit}
+                      {macro.val}
+                      {macro.unit}
                     </span>
                   </div>
                 ))}

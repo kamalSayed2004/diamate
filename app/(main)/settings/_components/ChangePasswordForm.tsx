@@ -8,6 +8,7 @@ import {
   AlertCircle,
   CheckCircle2,
 } from "lucide-react";
+import { BASE_API } from "@/app/config";
 
 interface ChangePasswordFormProps {
   token: string;
@@ -68,7 +69,7 @@ export default function ChangePasswordForm({ token }: ChangePasswordFormProps) {
     setLoading(true);
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_API}/Account/ChangePassword/${patientId}`,
+        `${BASE_API}/Account/ChangePassword/${patientId}`,
         {
           method: "PATCH",
           headers: {

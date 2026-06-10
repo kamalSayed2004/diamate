@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { BASE_API } from "@/app/config";
 
 interface AddMedicineFormProps {
   patientId: number;
@@ -64,17 +65,14 @@ export default function AddMedicineForm({
     };
 
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_API}/Medicine/AddNewMedicine`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
+      const res = await fetch(`${BASE_API}/Medicine/AddNewMedicine`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-      );
+        body: JSON.stringify(payload),
+      });
 
       if (!res.ok) throw new Error("Failed to add medication");
 

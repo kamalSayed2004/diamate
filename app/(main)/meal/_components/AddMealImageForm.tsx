@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { BASE_API, FOOD_API, ING_API } from "@/app/config";
 
 interface AddMealImageFormProps {
   patientId: number;
@@ -68,13 +69,10 @@ export default function AddMealImageForm({
       const formData = new FormData();
       formData.append("file", imageFile, imageFile.name);
 
-      const res = await fetch(
-        process.env.NEXT_PUBLIC_FOOD_API || "http://127.0.0.1:8000/detect-food",
-        {
-          method: "POST",
-          body: formData,
-        },
-      );
+      const res = await fetch(FOOD_API || "http://127.0.0.1:5050/detect-food", {
+        method: "POST",
+        body: formData,
+      });
 
       if (!res.ok) {
         throw new Error("Failed to analyze image. Please try again.");
@@ -135,12 +133,9 @@ export default function AddMealImageForm({
         const amountKg = Number(ingredientsAmounts[item]);
 
         // Fetch macronutrient data from macros API
-        const macrosRes = await fetch(
-          `${process.env.NEXT_PUBLIC_INGREDIENT_API}${encodeURIComponent(item)}`,
-          {
-            method: "GET",
-          },
-        );
+        const macrosRes = await fetch(`${ING_API}${encodeURIComponent(item)}`, {
+          method: "GET",
+        });
 
         if (!macrosRes.ok) {
           console.warn(`Failed to fetch macros for ${item}`);
@@ -175,17 +170,14 @@ export default function AddMealImageForm({
         };
 
         // Save each ingredient as a separate meal
-        const saveMealRes = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_API}/Meal/AddNewMeal`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify(mealPayload),
+        const saveMealRes = await fetch(`${BASE_API}/Meal/AddNewMeal`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
-        );
+          body: JSON.stringify(mealPayload),
+        });
 
         if (!saveMealRes.ok) {
           throw new Error(`Failed to save meal for ingredient: ${item}`);

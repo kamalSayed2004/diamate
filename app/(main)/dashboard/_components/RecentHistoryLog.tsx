@@ -1,4 +1,5 @@
 import React from "react";
+import { BASE_API } from "@/app/config";
 
 interface BloodGlucoseReading {
   id?: number;
@@ -24,7 +25,7 @@ export default async function RecentHistoryLog({
     try {
       const headers = { Authorization: `Bearer ${token}` };
       const bgRes = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_API}/BloodGlucoseReading/GetAllReadingsForPatient/${patientId}`,
+        `${BASE_API}/BloodGlucoseReading/GetAllReadingsForPatient/${patientId}`,
         { headers, cache: "no-store" },
       ).catch(() => null);
 

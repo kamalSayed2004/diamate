@@ -1,5 +1,6 @@
 import React from "react";
 import { Loader2 } from "lucide-react";
+import { BASE_API } from "@/app/config";
 
 interface Medicine {
   id?: number;
@@ -25,7 +26,7 @@ export default async function MedicineList({
   if (patientId > 0 && token) {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_API}/Medicine/GetAllMedicinesForPatient/${patientId}`,
+        `${BASE_API}/Medicine/GetAllMedicinesForPatient/${patientId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
           cache: "no-store",

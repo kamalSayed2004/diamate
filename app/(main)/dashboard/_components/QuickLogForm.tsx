@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { BASE_API } from "@/app/config";
 
 interface QuickLogFormProps {
   patientId: number;
@@ -55,7 +56,7 @@ export default function QuickLogForm({ patientId, token }: QuickLogFormProps) {
 
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_API}/BloodGlucoseReading/AddReadingForPatient`,
+        `${BASE_API}/BloodGlucoseReading/AddReadingForPatient`,
         {
           method: "POST",
           headers: {

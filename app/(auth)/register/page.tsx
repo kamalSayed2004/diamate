@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   Camera,
 } from "lucide-react";
+import { BASE_API } from "@/app/config";
 
 const ValidationError = ({ message }: { message?: string }) => {
   if (!message) return null;
@@ -206,20 +207,17 @@ export default function Register() {
         ? formData.profileImage.split(",")[1]
         : formData.profileImage;
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_API}/Account/RegisterNewUser`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...formData,
-            profileImage: imageToSend,
-            // Ensure dates are in ISO format if user changed them
-            dateOfBirth: new Date(formData.dateOfBirth).toISOString(),
-            dateOfDiagnosis: new Date(formData.dateOfDiagnosis).toISOString(),
-          }),
-        },
-      );
+      const response = await fetch(`${BASE_API}/Account/RegisterNewUser`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          profileImage: imageToSend,
+          // Ensure dates are in ISO format if user changed them
+          dateOfBirth: new Date(formData.dateOfBirth).toISOString(),
+          dateOfDiagnosis: new Date(formData.dateOfDiagnosis).toISOString(),
+        }),
+      });
 
       if (!response.ok)
         throw new Error("Registration failed. Please try again.");

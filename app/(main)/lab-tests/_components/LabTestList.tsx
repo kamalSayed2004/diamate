@@ -1,4 +1,5 @@
 import React from "react";
+import { BASE_API } from "@/app/config";
 
 interface LabTest {
   id?: number;
@@ -25,7 +26,7 @@ export default async function LabTestList({
     try {
       const headers = { Authorization: `Bearer ${token}` };
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_API}/LabTest/GetAllTestsForPatient/${patientId}`,
+        `${BASE_API}/LabTest/GetAllTestsForPatient/${patientId}`,
         { headers, cache: "no-store" },
       );
       if (res.ok) {

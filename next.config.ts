@@ -12,27 +12,6 @@ const corsHeaders = [
   },
 ];
 
-const nextConfig: NextConfig = {
-  async rewrites() {
-    const dest =
-      process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_BASE_API;
-    if (!dest) return [];
-    const destClean = dest.replace(/\/$/, "");
-    return [
-      {
-        source: "/api/:path((?!dfu|macros).*)",
-        destination: `${destClean}/:path*`,
-      },
-    ];
-  },
-  async headers() {
-    return [
-      {
-        source: "/:path*",
-        headers: corsHeaders,
-      },
-    ];
-  },
-};
+const nextConfig: NextConfig = {};
 
 export default nextConfig;

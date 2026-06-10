@@ -3,6 +3,7 @@
 import React, { useState, useRef } from "react";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { BASE_API, DFU_API } from "@/app/config";
 
 interface FootUlcerFormProps {
   patientId: number;
@@ -63,14 +64,13 @@ export default function FootUlcerForm({
   const handleSaveUlcer = async () => {
     if (!ulcerImageBase64) return setError("Foot ulcer image is required.");
     if (!ulcerUploadDate) return setError("Please select an upload date.");
-    if (!process.env.NEXT_PUBLIC_BASE_API)
-      return setError("Base API endpoint is not configured.");
+    if (!BASE_API) return setError("Base API endpoint is not configured.");
 
     setLoadingSubmit(true);
     setError(null);
 
     try {
-      const dfuRes = await fetch(process.env.NEXT_PUBLIC_DFU_API, {
+      const dfuRes = await fetch(DFU_API, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -127,8 +127,7 @@ export default function FootUlcerForm({
       };
 
       const res = await fetch(
-        process.env.NEXT_PUBLIC_BASE_API +
-          "/FootUlcerImage/AddFootUlcerImageForPatient",
+        BASE_API + "/FootUlcerImage/AddFootUlcerImageForPatient",
         {
           method: "POST",
           headers: {

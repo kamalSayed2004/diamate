@@ -12,13 +12,7 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
   const { pathname } = request.nextUrl;
 
-  // Define public paths that don't require authentication
-  const envSkipPaths = process.env.SKIP_CORS_PATHS
-    ? process.env.SKIP_CORS_PATHS.split(",")
-        .map((path) => path.trim())
-        .filter(Boolean)
-    : [];
-  const publicPaths = ["/", "/login", "/register", "/auth/register"];
+  const publicPaths = ["/", "/login", "/verify", "/register", "/auth/register"];
 
   const isPublicPath = publicPaths.some((path) =>
     path === "/"

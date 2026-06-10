@@ -1,4 +1,5 @@
 import React from "react";
+import { BASE_API } from "@/app/config";
 
 interface FootUlcer {
   id?: number;
@@ -23,7 +24,7 @@ export default async function FootUlcerList({
     try {
       const headers = { Authorization: `Bearer ${token}` };
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_API}/FootUlcerImage/GetAllFootUlcerImagesForPatient/${patientId}`,
+        `${BASE_API}/FootUlcerImage/GetAllFootUlcerImagesForPatient/${patientId}`,
         { headers, cache: "no-store" },
       );
       if (res.ok) {

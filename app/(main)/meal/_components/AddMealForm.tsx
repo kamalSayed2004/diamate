@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { BASE_API } from "@/app/config";
 
 interface AddMealFormProps {
   patientId: number;
@@ -71,17 +72,14 @@ export default function AddMealForm({ patientId, token }: AddMealFormProps) {
     };
 
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_API}/Meal/AddNewMeal`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
+      const res = await fetch(`${BASE_API}/Meal/AddNewMeal`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-      );
+        body: JSON.stringify(payload),
+      });
 
       if (!res.ok) throw new Error("Failed to add meal");
 
@@ -150,18 +148,50 @@ export default function AddMealForm({ patientId, token }: AddMealFormProps) {
           </label>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {[
-              { label: "Calories", unit: "kcal", value: calories, setter: setCalories, icon: "local_fire_department", color: "text-orange-500" },
-              { label: "Protein", unit: "g", value: protein, setter: setProtein, icon: "fitness_center", color: "text-blue-500" },
-              { label: "Carbs", unit: "g", value: carbs, setter: setCarbs, icon: "bakery_dining", color: "text-emerald-500" },
-              { label: "Fats", unit: "g", value: fats, setter: setFats, icon: "opacity", color: "text-amber-500" },
+              {
+                label: "Calories",
+                unit: "kcal",
+                value: calories,
+                setter: setCalories,
+                icon: "local_fire_department",
+                color: "text-orange-500",
+              },
+              {
+                label: "Protein",
+                unit: "g",
+                value: protein,
+                setter: setProtein,
+                icon: "fitness_center",
+                color: "text-blue-500",
+              },
+              {
+                label: "Carbs",
+                unit: "g",
+                value: carbs,
+                setter: setCarbs,
+                icon: "bakery_dining",
+                color: "text-emerald-500",
+              },
+              {
+                label: "Fats",
+                unit: "g",
+                value: fats,
+                setter: setFats,
+                icon: "opacity",
+                color: "text-amber-500",
+              },
             ].map((macro) => (
               <div key={macro.label} className="space-y-1.5">
                 <label className="block text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider ml-1">
                   {macro.label}
                 </label>
                 <div className="relative group">
-                  <span className={`absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none ${macro.color} opacity-80 group-focus-within:opacity-100 transition-opacity`}>
-                    <span className="material-icons text-lg sm:text-xl">{macro.icon}</span>
+                  <span
+                    className={`absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none ${macro.color} opacity-80 group-focus-within:opacity-100 transition-opacity`}
+                  >
+                    <span className="material-icons text-lg sm:text-xl">
+                      {macro.icon}
+                    </span>
                   </span>
                   <input
                     className="w-full pl-10 pr-3 py-3 sm:py-3.5 text-sm sm:text-base bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-[#259ee4] outline-none transition-all dark:text-white shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"

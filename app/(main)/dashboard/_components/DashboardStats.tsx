@@ -1,5 +1,6 @@
 import React from "react";
 import { Activity, TestTubeDiagonal, Syringe, Pill } from "lucide-react";
+import { BASE_API } from "@/app/config";
 
 interface DashboardStatsProps {
   patientId: number;
@@ -21,21 +22,21 @@ export default async function DashboardStats({
 
       const [bgRes, labRes, ulcerRes, medRes] = await Promise.all([
         fetch(
-          `${process.env.NEXT_PUBLIC_BASE_API}/BloodGlucoseReading/GetAllReadingsForPatient/${patientId}`,
+          `${BASE_API}/BloodGlucoseReading/GetAllReadingsForPatient/${patientId}`,
           { headers, cache: "no-store" },
         ).catch(() => null),
+        fetch(`${BASE_API}/LabTest/GetAllTestsForPatient/${patientId}`, {
+          headers,
+          cache: "no-store",
+        }).catch(() => null),
         fetch(
-          `${process.env.NEXT_PUBLIC_BASE_API}/LabTest/GetAllTestsForPatient/${patientId}`,
+          `${BASE_API}/FootUlcerImage/GetAllFootUlcerImagesForPatient/${patientId}`,
           { headers, cache: "no-store" },
         ).catch(() => null),
-        fetch(
-          `${process.env.NEXT_PUBLIC_BASE_API}/FootUlcerImage/GetAllFootUlcerImagesForPatient/${patientId}`,
-          { headers, cache: "no-store" },
-        ).catch(() => null),
-        fetch(
-          `${process.env.NEXT_PUBLIC_BASE_API}/Medicine/GetAllMedicinesForPatient/${patientId}`,
-          { headers, cache: "no-store" },
-        ).catch(() => null),
+        fetch(`${BASE_API}/Medicine/GetAllMedicinesForPatient/${patientId}`, {
+          headers,
+          cache: "no-store",
+        }).catch(() => null),
       ]);
 
       if (bgRes && bgRes.ok) {

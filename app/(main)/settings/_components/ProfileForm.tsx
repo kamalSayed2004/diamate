@@ -3,6 +3,7 @@
 import React, { useState, useRef } from "react";
 import { Loader2, Camera, User, AlertCircle, CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { BASE_API } from "@/app/config";
 
 interface PatientData {
   firstName: string;
@@ -137,7 +138,7 @@ export default function ProfileForm({
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_API}/Patients/UpdatePatient/${patientId}`,
+        `${BASE_API}/Patients/UpdatePatient/${patientId}`,
         {
           method: "PUT",
           headers: {

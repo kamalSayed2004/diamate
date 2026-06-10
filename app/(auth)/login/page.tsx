@@ -7,18 +7,24 @@ import {
   Loader2,
   Sparkles,
   User,
+  Mail,
   ShieldCheck,
 } from "lucide-react";
+import { BASE_API } from "@/app/config";
+
+type LoginMode = "email" | "username";
 
 export default function Login() {
   const [darkMode, setDarkMode] = useState<"light" | "dark">("light");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loginMode, setLoginMode] = useState<LoginMode>("email");
   const router = useRouter();
   const isDark = darkMode === "dark";
 
   // Form State
   const [formData, setFormData] = useState({
+    email: "",
     userName: "",
     password: "",
   });
@@ -50,6 +56,11 @@ export default function Login() {
     }
   };
 
+  const handleModeSwitch = (mode: LoginMode) => {
+    setLoginMode(mode);
+    setError(null);
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -60,8 +71,19 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.userName || !formData.password) {
-      setError("Please enter both username and password.");
+
+    const isEmail = loginMode === "email";
+
+    if (isEmail && !formData.email) {
+      setError("Please enter your email and password.");
+      return;
+    }
+    if (!isEmail && !formData.userName) {
+      setError("Please enter your username and password.");
+      return;
+    }
+    if (!formData.password) {
+      setError("Please enter your password.");
       return;
     }
 
@@ -69,33 +91,44 @@ export default function Login() {
     setError(null);
 
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_API}/Account/LogIn`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userName: formData.userName,
-            password: formData.password,
-          }),
-        },
-      );
+      const endpoint = isEmail
+        ? `${BASE_API}/Account/LogInByEmail`
+        : `${BASE_API}/Account/LogInByUsername`;
 
-      if (!response.ok)
-        throw new Error("Invalid username or password. Please try again.");
+      const body = isEmail
+        ? { email: formData.email, password: formData.password }
+        : { userName: formData.userName, password: formData.password };
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
 
       const data = await response.json().catch(() => ({}));
+
+      // Handle inactive email — redirect to verify regardless of status code
+      if (data?.message === "Email is not Active") {
+        router.push("/verify");
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          data?.message || "Invalid credentials. Please try again.",
+        );
+      }
 
       if (data.token) {
         document.cookie = `token=${data.token}; path=/; max-age=86400`;
 
         try {
           const payloadBase64 = data.token.split(".")[1];
-          // Use standard browser atob for decoding the base64 payload
           const decodedJson = atob(payloadBase64);
           const decoded = JSON.parse(decodedJson);
 
-          const pid = decoded.PatientId || decoded.patientId;
+          const pid = data.patientId || decoded.PatientId || decoded.patientId;
+
           if (pid) {
             document.cookie = `patientId=${pid}; path=/; max-age=86400`;
           }
@@ -136,6 +169,7 @@ export default function Login() {
       />
 
       <div className="mx-auto w-full max-w-md px-4 py-8 sm:px-6 lg:px-8 relative z-10 my-auto">
+        {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <button
             onClick={() => router.back()}
@@ -159,6 +193,7 @@ export default function Login() {
           </div>
         </div>
 
+        {/* Title */}
         <div className="mb-10 text-center">
           <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
             Welcome back
@@ -173,45 +208,92 @@ export default function Login() {
             className={`group relative overflow-hidden rounded-[2rem] border p-6 sm:p-8 shadow-sm transition duration-300 ${surface} ${ringHover}`}
           >
             <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500 via-sky-400 to-blue-600 opacity-90" />
+
             <div className="space-y-5">
+              {/* Mode Toggle */}
+              <div
+                className={`flex rounded-xl p-1 text-sm font-medium ${isDark ? "bg-slate-800/70" : "bg-slate-100"}`}
+              >
+                <button
+                  type="button"
+                  onClick={() => handleModeSwitch("email")}
+                  className={`flex flex-1 items-center justify-center gap-2 rounded-lg py-2 transition-all duration-200 ${
+                    loginMode === "email"
+                      ? "bg-blue-600 text-white shadow-sm shadow-blue-600/30"
+                      : `${muted} hover:text-blue-500`
+                  }`}
+                >
+                  <Mail className="h-4 w-4" />
+                  Email
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleModeSwitch("username")}
+                  className={`flex flex-1 items-center justify-center gap-2 rounded-lg py-2 transition-all duration-200 ${
+                    loginMode === "username"
+                      ? "bg-blue-600 text-white shadow-sm shadow-blue-600/30"
+                      : `${muted} hover:text-blue-500`
+                  }`}
+                >
+                  <User className="h-4 w-4" />
+                  Username
+                </button>
+              </div>
+
+              {/* Email / Username Field */}
               <div className="space-y-2">
                 <label className={`text-sm font-medium ml-1 ${muted}`}>
-                  Username
+                  {loginMode === "email" ? "Email" : "Username"}
                 </label>
                 <div
                   className={`flex items-center p-3 space-x-3 border w-full rounded-xl transition-shadow focus-within:ring-2 focus-within:ring-blue-500/50 ${inputBg}`}
                 >
-                  <User className={`h-5 w-5 ${muted}`} />
-                  <input
-                    required
-                    name="userName"
-                    placeholder="Username"
-                    className="w-full bg-transparent outline-none border-none focus:ring-0 p-0 text-base"
-                    onChange={handleChange}
-                  />
+                  {loginMode === "email" ? (
+                    <Mail className={`h-5 w-5 shrink-0 ${muted}`} />
+                  ) : (
+                    <User className={`h-5 w-5 shrink-0 ${muted}`} />
+                  )}
+                  {loginMode === "email" ? (
+                    <input
+                      key="email"
+                      required
+                      name="email"
+                      type="email"
+                      placeholder="you@example.com"
+                      value={formData.email}
+                      className="w-full bg-transparent outline-none border-none focus:ring-0 p-0 text-base"
+                      onChange={handleChange}
+                    />
+                  ) : (
+                    <input
+                      key="username"
+                      required
+                      name="userName"
+                      type="text"
+                      placeholder="Username"
+                      value={formData.userName}
+                      className="w-full bg-transparent outline-none border-none focus:ring-0 p-0 text-base"
+                      onChange={handleChange}
+                    />
+                  )}
                 </div>
               </div>
+
+              {/* Password Field */}
               <div className="space-y-2">
-                <div className="flex items-center justify-between ml-1">
-                  <label className={`text-sm font-medium ${muted}`}>
-                    Password
-                  </label>
-                  <a
-                    href="#"
-                    className="text-xs font-semibold text-blue-600 hover:underline dark:text-blue-400"
-                  >
-                    Forgot password?
-                  </a>
-                </div>
+                <label className={`text-sm font-medium ml-1 ${muted}`}>
+                  Password
+                </label>
                 <div
                   className={`flex items-center p-3 space-x-3 border w-full rounded-xl transition-shadow focus-within:ring-2 focus-within:ring-blue-500/50 ${inputBg}`}
                 >
-                  <ShieldCheck className={`h-5 w-5 ${muted}`} />
+                  <ShieldCheck className={`h-5 w-5 shrink-0 ${muted}`} />
                   <input
                     required
                     name="password"
                     type="password"
                     placeholder="••••••••"
+                    value={formData.password}
                     className="w-full bg-transparent outline-none border-none focus:ring-0 p-0 text-base"
                     onChange={handleChange}
                   />

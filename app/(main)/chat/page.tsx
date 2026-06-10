@@ -7,6 +7,7 @@ import {
   useState,
   type ChangeEvent,
 } from "react";
+import { CHAT_API } from "@/app/config";
 
 const ChatPage = () => {
   const [sessions, setSessions] = useState<string[]>([]);
@@ -42,7 +43,7 @@ const ChatPage = () => {
   const [showFilesOverlay, setShowFilesOverlay] = useState(false);
   const [newSessionName, setNewSessionName] = useState("");
 
-  const apiBase = process.env.NEXT_PUBLIC_CHAT_API?.replace(/\/+$/, "") ?? "";
+  const apiBase = CHAT_API?.replace(/\/+$/, "") ?? "";
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {

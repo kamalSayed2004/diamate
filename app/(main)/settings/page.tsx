@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import ProfileForm from "./_components/ProfileForm";
 import ChangePasswordForm from "./_components/ChangePasswordForm";
 import { AlertCircle, Loader2 } from "lucide-react";
+import { BASE_API } from "@/app/config";
 
 async function ProfileFormWrapper() {
   const cookieStore = await cookies();
@@ -34,13 +35,10 @@ async function ProfileFormWrapper() {
 
   if (patientId > 0 && token) {
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_API}/Patients/GetPatient/${patientId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          cache: "no-store",
-        },
-      );
+      const res = await fetch(`${BASE_API}/Patients/GetPatient/${patientId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        cache: "no-store",
+      });
       if (res.ok) {
         const data = await res.json();
         initialData = {
