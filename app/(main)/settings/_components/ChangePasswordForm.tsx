@@ -68,20 +68,17 @@ export default function ChangePasswordForm({ token }: ChangePasswordFormProps) {
 
     setLoading(true);
     try {
-      const response = await fetch(
-        `${BASE_API}/Account/ChangePassword/${patientId}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            currentPassword: formData.currentPassword,
-            newPassword: formData.newPassword,
-          }),
+      const response = await fetch(`${BASE_API}/Account/ChangePassword`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-      );
+        body: JSON.stringify({
+          currentPassword: formData.currentPassword,
+          newPassword: formData.newPassword,
+        }),
+      });
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));

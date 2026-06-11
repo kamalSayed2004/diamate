@@ -6,29 +6,29 @@ import {
   ChevronLeft,
   Loader2,
   Sparkles,
-  User,
   Mail,
   ShieldCheck,
+  KeyRound,
+  CheckCircle2,
 } from "lucide-react";
 import { BASE_API } from "@/app/config";
 
-type LoginMode = "email" | "username";
-
-export default function Login() {
+export default function Verify() {
   const [darkMode, setDarkMode] = useState<"light" | "dark">("light");
   const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [loginMode, setLoginMode] = useState<LoginMode>("email");
+  const [success, setSuccess] = useState<string | null>(null);
   const router = useRouter();
   const isDark = darkMode === "dark";
 
   // Form State
   const [formData, setFormData] = useState({
     email: "",
-    userName: "",
-    password: "",
+    code: "",
   });
 
+  // Sync theme and catch email from URL query param if available
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "dark") {
@@ -43,6 +43,15 @@ export default function Login() {
         : "light";
       setDarkMode(fallback as "light" | "dark");
     }
+
+    // Safely parse email from URL query string on client side
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const emailParam = params.get("email");
+      if (emailParam) {
+        setFormData((prev) => ({ ...prev, email: emailParam }));
+      }
+    }
   }, []);
 
   const toggleTheme = () => {
@@ -56,11 +65,6 @@ export default function Login() {
     }
   };
 
-  const handleModeSwitch = (mode: LoginMode) => {
-    setLoginMode(mode);
-    setError(null);
-  };
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -72,81 +76,73 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const isEmail = loginMode === "email";
-
-    if (isEmail && !formData.email) {
-      setError("Please enter your email and password.");
+    if (!formData.email) {
+      setError("Please enter your email address.");
       return;
     }
-    if (!isEmail && !formData.userName) {
-      setError("Please enter your username and password.");
-      return;
-    }
-    if (!formData.password) {
-      setError("Please enter your password.");
+    if (!formData.code) {
+      setError("Please enter your verification code.");
       return;
     }
 
     setLoading(true);
     setError(null);
+    setSuccess(null);
 
     try {
-      const endpoint = isEmail
-        ? `${BASE_API}/Account/LogInByEmail`
-        : `${BASE_API}/Account/LogInByUsername`;
-
-      const body = isEmail
-        ? { email: formData.email, password: formData.password }
-        : { userName: formData.userName, password: formData.password };
+      const endpoint = `${BASE_API}/Account/VerifyEmail?email=${encodeURIComponent(formData.email)}&code=${encodeURIComponent(formData.code)}`;
 
       const response = await fetch(endpoint, {
-        method: "POST",
+        method: "POST", // Standard form submission method
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
       });
+
       const responseText = await response.text();
 
-      let data: any = {};
-      try {
-        data = JSON.parse(responseText);
-      } catch {
-        // plain text response, data stays {}
+      if (responseText.includes("Invalid code") || !response.ok) {
+        throw new Error(responseText || "Invalid code. Please try again.");
       }
 
-      if (responseText === "message: Email is not Active") {
-        router.push("/verify");
-        return;
-      }
-
-      if (!response.ok) {
-        throw new Error(
-          data?.message || "Invalid credentials. Please try again.",
-        );
-      }
-
-      if (data.token) {
-        document.cookie = `token=${data.token}; path=/; max-age=86400`;
-
-        try {
-          const payloadBase64 = data.token.split(".")[1];
-          const decodedJson = atob(payloadBase64);
-          const decoded = JSON.parse(decodedJson);
-
-          const pid = data.patientId || decoded.PatientId || decoded.patientId;
-
-          if (pid) {
-            document.cookie = `patientId=${pid}; path=/; max-age=86400`;
-          }
-        } catch (e) {
-          console.error("Failed to decode token", e);
-        }
-      }
-
-      router.push("/dashboard");
+      setSuccess("Email verified successfully! Redirecting to login...");
+      setTimeout(() => {
+        router.push("/login");
+      }, 2500);
     } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    if (!formData.email) {
+      setError("Please enter your email address to resend the code.");
+      return;
+    }
+
+    setResendLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const endpoint = `${BASE_API}/Account/ResendCode?email=${encodeURIComponent(formData.email)}`;
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          "Failed to resend verification code. Please try again.",
+        );
+      }
+
+      setSuccess("A new verification code has been sent to your email.");
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -201,10 +197,10 @@ export default function Login() {
         {/* Title */}
         <div className="mb-10 text-center">
           <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-            Welcome back
+            Verify your email
           </h1>
           <p className={`mt-3 ${muted}`}>
-            Enter your details to sign in to DiaMate.
+            Enter the verification code sent to your inbox.
           </p>
         </div>
 
@@ -215,94 +211,61 @@ export default function Login() {
             <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500 via-sky-400 to-blue-600 opacity-90" />
 
             <div className="space-y-5">
-              {/* Mode Toggle */}
-              <div
-                className={`flex rounded-xl p-1 text-sm font-medium ${isDark ? "bg-slate-800/70" : "bg-slate-100"}`}
-              >
-                <button
-                  type="button"
-                  onClick={() => handleModeSwitch("email")}
-                  className={`flex flex-1 items-center justify-center gap-2 rounded-lg py-2 transition-all duration-200 ${
-                    loginMode === "email"
-                      ? "bg-blue-600 text-white shadow-sm shadow-blue-600/30"
-                      : `${muted} hover:text-blue-500`
-                  }`}
-                >
-                  <Mail className="h-4 w-4" />
-                  Email
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleModeSwitch("username")}
-                  className={`flex flex-1 items-center justify-center gap-2 rounded-lg py-2 transition-all duration-200 ${
-                    loginMode === "username"
-                      ? "bg-blue-600 text-white shadow-sm shadow-blue-600/30"
-                      : `${muted} hover:text-blue-500`
-                  }`}
-                >
-                  <User className="h-4 w-4" />
-                  Username
-                </button>
-              </div>
-
-              {/* Email / Username Field */}
+              {/* Email Field */}
               <div className="space-y-2">
                 <label className={`text-sm font-medium ml-1 ${muted}`}>
-                  {loginMode === "email" ? "Email" : "Username"}
+                  Email Address
                 </label>
                 <div
                   className={`flex items-center p-3 space-x-3 border w-full rounded-xl transition-shadow focus-within:ring-2 focus-within:ring-blue-500/50 ${inputBg}`}
                 >
-                  {loginMode === "email" ? (
-                    <Mail className={`h-5 w-5 shrink-0 ${muted}`} />
-                  ) : (
-                    <User className={`h-5 w-5 shrink-0 ${muted}`} />
-                  )}
-                  {loginMode === "email" ? (
-                    <input
-                      key="email"
-                      required
-                      name="email"
-                      type="email"
-                      placeholder="you@example.com"
-                      value={formData.email}
-                      className="w-full bg-transparent outline-none border-none focus:ring-0 p-0 text-base"
-                      onChange={handleChange}
-                    />
-                  ) : (
-                    <input
-                      key="username"
-                      required
-                      name="userName"
-                      type="text"
-                      placeholder="Username"
-                      value={formData.userName}
-                      className="w-full bg-transparent outline-none border-none focus:ring-0 p-0 text-base"
-                      onChange={handleChange}
-                    />
-                  )}
-                </div>
-              </div>
-
-              {/* Password Field */}
-              <div className="space-y-2">
-                <label className={`text-sm font-medium ml-1 ${muted}`}>
-                  Password
-                </label>
-                <div
-                  className={`flex items-center p-3 space-x-3 border w-full rounded-xl transition-shadow focus-within:ring-2 focus-within:ring-blue-500/50 ${inputBg}`}
-                >
-                  <ShieldCheck className={`h-5 w-5 shrink-0 ${muted}`} />
+                  <Mail className={`h-5 w-5 shrink-0 ${muted}`} />
                   <input
                     required
-                    name="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={formData.password}
+                    name="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={formData.email}
                     className="w-full bg-transparent outline-none border-none focus:ring-0 p-0 text-base"
                     onChange={handleChange}
                   />
                 </div>
+              </div>
+
+              {/* Verification Code Field */}
+              <div className="space-y-2">
+                <label className={`text-sm font-medium ml-1 ${muted}`}>
+                  Verification Code
+                </label>
+                <div
+                  className={`flex items-center p-3 space-x-3 border w-full rounded-xl transition-shadow focus-within:ring-2 focus-within:ring-blue-500/50 ${inputBg}`}
+                >
+                  <KeyRound className={`h-5 w-5 shrink-0 ${muted}`} />
+                  <input
+                    required
+                    name="code"
+                    type="text"
+                    placeholder="Enter 6-digit code"
+                    value={formData.code}
+                    className="w-full bg-transparent outline-none border-none focus:ring-0 p-0 text-base tracking-wide"
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+
+              {/* Resend Action */}
+              <div className="text-right pt-1">
+                <button
+                  type="button"
+                  disabled={resendLoading}
+                  onClick={handleResendCode}
+                  className="text-sm font-semibold text-blue-600 hover:underline dark:text-blue-400 disabled:opacity-60 inline-flex items-center gap-1"
+                >
+                  {resendLoading && (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  )}
+                  Resend Code?
+                </button>
               </div>
             </div>
           </section>
@@ -310,6 +273,13 @@ export default function Login() {
           {error && (
             <div className="rounded-2xl border border-red-500/50 bg-red-500/10 p-4 text-center text-sm font-medium text-red-600 dark:text-red-400">
               {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="rounded-2xl border border-emerald-500/50 bg-emerald-500/10 p-4 text-center text-sm font-medium text-emerald-600 dark:text-emerald-400 flex items-center justify-center gap-2">
+              <CheckCircle2 className="h-4 w-4 shrink-0" />
+              {success}
             </div>
           )}
 
@@ -323,7 +293,7 @@ export default function Login() {
                 <Loader2 className="h-6 w-6 animate-spin" />
               ) : (
                 <>
-                  Sign In{" "}
+                  Verify Code{" "}
                   <Sparkles className="h-5 w-5 transition-transform group-hover:-rotate-12" />
                 </>
               )}
@@ -332,12 +302,12 @@ export default function Login() {
         </form>
 
         <p className={`mt-10 mb-8 text-center text-sm ${muted}`}>
-          Don&apos;t have an account?{" "}
+          Back to{" "}
           <a
-            href="/register"
+            href="/login"
             className="font-semibold text-blue-600 hover:underline dark:text-blue-400"
           >
-            Sign up
+            Sign in
           </a>
         </p>
       </div>

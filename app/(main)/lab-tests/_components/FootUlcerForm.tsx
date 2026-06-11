@@ -221,7 +221,7 @@ export default function FootUlcerForm({
 
           <div>
             <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5 sm:mb-2">
-              Upload Date
+              Diagnosis Date
             </label>
             <div className="relative border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900 overflow-hidden shadow-sm">
               <input
