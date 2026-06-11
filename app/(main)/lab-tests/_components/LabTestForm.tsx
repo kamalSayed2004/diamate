@@ -21,6 +21,11 @@ export default function LabTestForm({ patientId, token }: LabTestFormProps) {
   const [labNotes, setLabNotes] = useState("");
   const [testDate, setTestDate] = useState("");
   const [reportImageBase64, setReportImageBase64] = useState("");
+
+  // New state to track file type and name for previewing PDFs
+  const [fileType, setFileType] = useState("");
+  const [fileName, setFileName] = useState("");
+
   const labImageInputRef = useRef<HTMLInputElement>(null);
 
   const toBase64 = (file: File) =>
@@ -44,11 +49,13 @@ export default function LabTestForm({ patientId, token }: LabTestFormProps) {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
       try {
+        setFileType(file.type);
+        setFileName(file.name);
         const base64Str = await toBase64(file);
         setReportImageBase64(base64Str);
       } catch (err) {
         console.error(err);
-        setError("Failed to process lab test image.");
+        setError("Failed to process lab test file.");
       }
     }
   };
@@ -60,6 +67,8 @@ export default function LabTestForm({ patientId, token }: LabTestFormProps) {
     setLabNotes("");
     setTestDate("");
     setReportImageBase64("");
+    setFileType("");
+    setFileName("");
     if (labImageInputRef.current) labImageInputRef.current.value = "";
     setError(null);
   };
@@ -68,7 +77,7 @@ export default function LabTestForm({ patientId, token }: LabTestFormProps) {
     if (!testName.trim()) return setError("Please provide a test name.");
     if (!resultValue.trim()) return setError("Please provide a result value.");
     if (!testDate) return setError("Please select a test date.");
-    if (!reportImageBase64) return setError("Report image is required.");
+    if (!reportImageBase64) return setError("Report file is required.");
 
     setLoadingSubmit(true);
     setError(null);
@@ -80,7 +89,7 @@ export default function LabTestForm({ patientId, token }: LabTestFormProps) {
       normalRange,
       notes: labNotes,
       testDate: new Date(testDate).toISOString(),
-      report_Image: reportImageBase64,
+      report_Image: reportImageBase64, // Still sends raw base64
     };
 
     try {
@@ -174,12 +183,12 @@ export default function LabTestForm({ patientId, token }: LabTestFormProps) {
 
           <div className="md:col-span-2">
             <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5 sm:mb-2">
-              Report Image <span className="text-red-500">*</span>
+              Report File (Image or PDF) <span className="text-red-500">*</span>
             </label>
             <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-6 text-center bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
               <input
                 type="file"
-                accept="image/*"
+                accept="image/*,application/pdf"
                 className="hidden"
                 id="lab-upload"
                 ref={labImageInputRef}
@@ -195,20 +204,31 @@ export default function LabTestForm({ patientId, token }: LabTestFormProps) {
                       cloud_upload
                     </span>
                     <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
-                      Click to upload report image
+                      Click to upload report file
                     </span>
                     <span className="text-xs text-slate-400 mt-1">
-                      Supports JPG, PNG
+                      Supports JPG, PNG, PDF
                     </span>
                   </>
                 ) : (
                   <div className="relative w-full h-32 md:h-40 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-black/5 flex items-center justify-center">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={`data:image/jpeg;base64,${reportImageBase64}`}
-                      alt="Report Preview"
-                      className="h-full w-full object-contain"
-                    />
+                    {fileType === "application/pdf" ? (
+                      <div className="flex flex-col items-center justify-center space-y-2 p-4">
+                        <span className="material-icons text-5xl text-red-500">
+                          picture_as_pdf
+                        </span>
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate max-w-full px-4">
+                          {fileName || "PDF Document"}
+                        </span>
+                      </div>
+                    ) : (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        src={`data:${fileType || "image/jpeg"};base64,${reportImageBase64}`}
+                        alt="Report Preview"
+                        className="h-full w-full object-contain"
+                      />
+                    )}
                     <div className="absolute top-2 right-2 bg-violet-600 text-white rounded-full p-1.5 shadow-md flex items-center justify-center">
                       <span className="material-icons text-[16px]">edit</span>
                     </div>
@@ -233,7 +253,6 @@ export default function LabTestForm({ patientId, token }: LabTestFormProps) {
         </div>
       </div>
 
-      {/* Unified Action Footer - Following Medicine Page Structure Exactly */}
       <div className="shrink-0 py-5 sm:py-6 border-t border-slate-100 dark:border-slate-800 flex flex-col-reverse sm:flex-row justify-end items-stretch sm:items-center gap-3">
         <button
           type="button"
